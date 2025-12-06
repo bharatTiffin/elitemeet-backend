@@ -1,16 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
-const { 
-  getAvailableSlots, 
-  getAllSlots, 
+
+const {
+  getAvailableSlots,
+  getAllSlots,
   createSlots,
   updateSlot,
   deleteSlot
 } = require("../controllers/slotController");
 
 // Public route - get available slots
-router.get("/", getAvailableSlots);
+router.get("/available", getAvailableSlots);  // ✅ Changed from "/" to "/available"
 
 // Admin routes - protected
 router.get("/all", auth, getAllSlots);

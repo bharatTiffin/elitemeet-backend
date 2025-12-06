@@ -8,6 +8,7 @@ const Slot = require("../models/Slot");
  */
 const getAvailableSlots = async (req, res, next) => {
   try {
+    console.log("getAvailableSlots");
     const { from, to } = req.query;
     const query = { status: "free" };
 
@@ -29,6 +30,7 @@ const getAvailableSlots = async (req, res, next) => {
  */
 const getAllSlots = async (req, res, next) => {
   try {
+    console.log("getAllSlots");
     const { role, id: adminFirebaseUid } = req.user;
 
     if (role !== "admin") {
