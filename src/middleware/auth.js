@@ -1,10 +1,11 @@
 // src/middleware/auth.js
-const admin = require("../config/firebase");
+
+const admin = require("../config/firebase-admin");
 const User = require("../models/User");
 
 /**
  * Verifies Firebase idToken sent in Authorization header:
- * Authorization: Bearer <idToken>
+ * Authorization: Bearer <token>
  */
 const auth = async (req, res, next) => {
   try {
@@ -16,22 +17,18 @@ const auth = async (req, res, next) => {
     }
 
     const decoded = await admin.auth().verifyIdToken(token);
-
+    
+    // 🔥 ONLY FETCH USER - DON'T CREATE!
     let user = await User.findOne({ firebaseUid: decoded.uid });
-    if (!user) {
-      user = await User.create({
-        firebaseUid: decoded.uid,
-        email: decoded.email,
-        name: decoded.name || decoded.displayName,
-        photoUrl: decoded.picture,
-      });
-    }
 
+    // Attach decoded Firebase info to req.user (authController will handle creation)
     req.user = {
-      id: user._id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
+      id: decoded.uid, // Use Firebase UID here
+      email: decoded.email,
+      name: decoded.name || decoded.display_name,
+      photoUrl: decoded.picture,
+      role: user ? user.role : 'user', // Use existing role if found
+      mongoUser: user // Pass existing MongoDB user if found
     };
 
     next();
