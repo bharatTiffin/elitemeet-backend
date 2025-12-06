@@ -16,19 +16,19 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ error: "No token provided" });
     }
 
+    // Verify Firebase token
     const decoded = await admin.auth().verifyIdToken(token);
     
-    // 🔥 ONLY FETCH USER - DON'T CREATE!
+    // Check if user already exists in MongoDB
     let user = await User.findOne({ firebaseUid: decoded.uid });
 
-    // Attach decoded Firebase info to req.user (authController will handle creation)
+    // Attach Firebase decoded info to req.user for authController to use
     req.user = {
-      id: decoded.uid, // Use Firebase UID here
+      id: decoded.uid, // This is the Firebase UID!
       email: decoded.email,
       name: decoded.name || decoded.display_name,
       photoUrl: decoded.picture,
-      role: user ? user.role : 'user', // Use existing role if found
-      mongoUser: user // Pass existing MongoDB user if found
+      role: user ? user.role : 'user'
     };
 
     next();
