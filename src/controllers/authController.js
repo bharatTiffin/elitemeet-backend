@@ -11,9 +11,11 @@ const syncUser = async (req, res, next) => {
     // req.user is set by auth middleware (from Firebase token)
     const { id, email, name, role } = req.user;
 
-    // 🔥 SAVE/UPDATE USER IN MONGODB
+    console.log('🔍 Syncing user with Firebase UID:', id);
+
+    // 🔥 SAVE/UPDATE USER IN MONGODB - Using firebaseUid as unique identifier
     const user = await User.findOneAndUpdate(
-      { firebaseUid: id }, // Find by Firebase UID
+      { firebaseUid: id }, // Find by Firebase UID (prevents duplicates!)
       {
         firebaseUid: id,
         email: email,
@@ -23,17 +25,23 @@ const syncUser = async (req, res, next) => {
       {
         upsert: true, // Create if doesn't exist
         new: true,    // Return updated document
-        setDefaultsOnInsert: true
+        setDefaultsOnInsert: true,
+        runValidators: true
       }
     );
 
-    console.log('✅ User synced to MongoDB:', user);
+    console.log('✅ User synced to MongoDB:', {
+      mongoId: user._id,
+      firebaseUid: user.firebaseUid,
+      email: user.email,
+      role: user.role
+    });
 
     res.json({
       success: true,
       message: "User synced successfully",
       user: {
-        id: user._id,
+        id: user._id.toString(), // MongoDB ID
         firebaseUid: user.firebaseUid,
         email: user.email,
         name: user.name,
