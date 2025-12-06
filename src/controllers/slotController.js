@@ -30,19 +30,21 @@ const getAvailableSlots = async (req, res, next) => {
  */
 const getAllSlots = async (req, res, next) => {
   try {
-    console.log("getAllSlots");
-    const { role, id: adminFirebaseUid } = req.user;
-
-    if (role !== "admin") {
-      return res.status(403).json({ error: "Admin access required" });
+    console.log('getAllSlots');
+    const { role, id } = req.user;
+    if (role !== 'admin') {
+      return res.status(403).json({ error: 'Admin access required' });
     }
-
-    const slots = await Slot.find({ adminFirebaseUid }).sort({ startTime: 1 });
+    
+    // ✅ CORRECT - fetch all slots created by this admin
+    const slots = await Slot.find({ adminFirebaseUid: id }).sort({ startTime: 1 });
+    
     res.json(slots);
   } catch (err) {
     next(err);
   }
 };
+
 
 /**
  * POST /api/slots
