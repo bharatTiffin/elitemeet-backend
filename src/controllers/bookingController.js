@@ -14,7 +14,7 @@ const { sendEmail } = require("../utils/email");
  */
 const createBooking = async (req, res, next) => {
   try {
-    const { slotId, userName, userEmail } = req.body;
+    const { slotId, userName, userEmail, purpose } = req.body;
     const userId = req.user.id;
 
     // 1. ATOMIC UPDATE: Check and lock slot in ONE operation
@@ -63,6 +63,7 @@ const createBooking = async (req, res, next) => {
         adminId: slot.adminId._id,
         userName,
         userEmail,
+        purpose: purpose || '',
         amount: slot.price,
         razorpayOrderId: razorpayOrder.id,
         status: "pending",
@@ -216,6 +217,7 @@ const verifyPayment = async (req, res, next) => {
               <h3 style="margin-top: 0;">Booking Details</h3>
               <p><strong>Client Name:</strong> ${booking.userName}</p>
               <p><strong>Client Email:</strong> ${booking.userEmail}</p>
+              ${booking.purpose ? `<p><strong>Purpose/Topic:</strong><br/>${booking.purpose}</p>` : ''}
               <p><strong>Date:</strong> ${new Date(slot.startTime).toLocaleDateString('en-IN', { 
                 weekday: 'long', 
                 year: 'numeric', 

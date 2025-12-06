@@ -19,11 +19,16 @@ const bookingSchema = new mongoose.Schema(
     adminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: false, // Made optional
+      required: false,
     },
     userName: {
       type: String,
       required: true,
+    },
+    purpose: {
+      type: String,
+      required: false,
+      maxlength: 500,
     },
     userEmail: {
       type: String,
@@ -35,7 +40,7 @@ const bookingSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "cancelled", "completed"], // Added "pending"
+      enum: ["pending", "confirmed", "cancelled", "completed"],
       default: "pending",
       index: true,
     },
@@ -51,7 +56,7 @@ const bookingSchema = new mongoose.Schema(
     },
     expiresAt: {
       type: Date,
-      required: false, // Made optional
+      required: false,
       default: function() {
         return new Date(Date.now() + 15 * 60 * 1000); // 15 minutes from now
       },
@@ -65,12 +70,13 @@ const bookingSchema = new mongoose.Schema(
 bookingSchema.index({ userId: 1, createdAt: -1 });
 bookingSchema.index({ status: 1, expiresAt: 1 });
 
-// TTL index to auto-delete expired pending bookings after 15 minutes
+// 🔥 MONGODB TTL INDEX - Auto-deletes expired pending bookings
+// This runs automatically in the background, no cron job needed!
 bookingSchema.index(
   { expiresAt: 1 },
-  { 
-    expireAfterSeconds: 0,
-    partialFilterExpression: { status: "pending" }
+  {
+    expireAfterSeconds: 0, // Delete immediately after expiresAt time
+    partialFilterExpression: { status: "pending" } // Only delete pending bookings
   }
 );
 
