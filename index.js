@@ -8,15 +8,15 @@ const app = express();
 // Database connection
 connectDB();
 
-// 🔥 FIXED CORS - Allow both localhost and Vercel frontend
+// CORS configuration
 app.use(cors({
   origin: [
     'http://localhost:5173', 
     'http://localhost:3000', 
     'http://localhost:5174',
     'https://elite-academy-meet.vercel.app',
-    'https://elitemeet-frontend.vercel.app', // Add your actual Vercel frontend URL
-    /\.vercel\.app$/ // Allow all Vercel preview deployments
+    'https://elitemeet-frontend.vercel.app',
+    /\.vercel\.app$/
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -24,9 +24,11 @@ app.use(cors({
   exposedHeaders: ['Content-Length', 'X-Requested-With']
 }));
 
-// ❌ REMOVE THIS LINE - it's causing the error
-// app.options('*', cors());
+// ✅ IMPORTANT: Webhook route MUST come BEFORE express.json()
+// This is because Razorpay webhook signature verification needs raw body
+app.use("/api/webhook", require("./src/routes/webhookRoutes"));
 
+// ✅ NOW parse JSON for all other routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -35,12 +37,11 @@ app.get("/", (req, res) => {
   res.json({ message: "Elite Meet API is running" });
 });
 
-// 🔥 ROUTES
+// 🔥 OTHER ROUTES (after express.json())
 app.use("/api/auth", require("./src/routes/authRoutes"));
 app.use("/api/slots", require("./src/routes/slotRoutes"));
 app.use("/api/bookings", require("./src/routes/bookingRoutes"));
 app.use("/api/payments", require("./src/routes/paymentRoutes"));
-app.use("/api/webhook", require("./src/routes/webhookRoutes"));
 app.use("/api/cron", require("./src/routes/cronRoutes"));
 
 // Error handling
