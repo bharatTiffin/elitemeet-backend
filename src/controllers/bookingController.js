@@ -159,9 +159,13 @@ const verifyPayment = async (req, res, next) => {
     const admin = await User.findOne({ firebaseUid: slot.adminFirebaseUid });
     const user = await User.findOne({ firebaseUid: booking.userFirebaseUid });
 
+    console.log("admin: ",admin);
+    console.log("user: ",user);
+
     // 5. Send confirmation emails (non-blocking)
     const emailPromises = [];
 
+    console.log("Email to User!!!")
     // Email to User
     if (user && user.email) {
       emailPromises.push(
@@ -197,6 +201,7 @@ const verifyPayment = async (req, res, next) => {
       );
     }
 
+    console.log("Email to Admin!!")
     // Email to Admin
     if (admin && admin.email) {
       emailPromises.push(
@@ -236,9 +241,10 @@ const verifyPayment = async (req, res, next) => {
     }
 
     // Wait for emails (non-blocking, don't fail if emails fail)
-    Promise.all(emailPromises).catch(err => {
-      console.error("Error sending emails:", err);
-    });
+    Promise.all(emailPromises)
+    .then(() => console.log('✅ Confirmation emails sent to user and admin'))
+    .catch(err => console.error('❌ Error sending emails:', err));
+  
 
     res.json({
       success: true,
