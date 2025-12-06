@@ -14,7 +14,7 @@ app.use(cors({
     'http://localhost:5173', 
     'http://localhost:3000', 
     'http://localhost:5174',
-    'https://elite-academy-meet.vercel.app'
+    'https://elite-academy-meet.vercel.app',
     'https://elitemeet-frontend.vercel.app', // Add your actual Vercel frontend URL
     /\.vercel\.app$/ // Allow all Vercel preview deployments
   ],
