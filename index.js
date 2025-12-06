@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const connectDB = require("./config/db");
+const connectDB = require("./src/config/db");
 require("dotenv").config();
 
 const app = express();
@@ -19,12 +19,12 @@ app.get("/", (req, res) => {
 });
 
 // 🔥 ROUTES - Make sure auth routes are registered!
-app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/slots", require("./routes/slotRoutes"));
-app.use("/api/bookings", require("./routes/bookingRoutes"));
-app.use("/api/payments", require("./routes/paymentRoutes"));
-app.use("/api/webhook", require("./routes/webhookRoutes"));
-app.use("/api/cron", require("./routes/cronRoutes"));
+app.use("/api/auth", require("./src/routes/authRoutes"));
+app.use("/api/slots", require("./src/routes/slotRoutes"));
+app.use("/api/bookings", require("./src/routes/bookingRoutes"));
+app.use("/api/payments", require("./src/routes/paymentRoutes"));
+app.use("/api/webhook", require("./src/routes/webhookRoutes"));
+app.use("/api/cron", require("./src/routes/cronRoutes"));
 
 // Error handling
 app.use((err, req, res, next) => {
