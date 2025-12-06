@@ -4,9 +4,8 @@ const mongoose = require("mongoose");
 
 const slotSchema = new mongoose.Schema(
   {
-    adminId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    adminFirebaseUid: {  // Changed from adminId
+      type: String,      // Changed from ObjectId to String
       required: true,
       index: true,
     },
@@ -29,13 +28,12 @@ const slotSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["free", "pending", "booked", "completed", "cancelled"], // Added "pending"
+      enum: ["free", "pending", "booked", "completed", "cancelled"],
       default: "free",
       index: true,
     },
     bookedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      type: String,  // Firebase UID of user who booked
     },
     meetingLink: {
       type: String,
@@ -45,7 +43,7 @@ const slotSchema = new mongoose.Schema(
 );
 
 // Index for faster queries
-slotSchema.index({ adminId: 1, startTime: 1 });
+slotSchema.index({ adminFirebaseUid: 1, startTime: 1 });
 slotSchema.index({ status: 1, startTime: 1 });
 
 module.exports = mongoose.model("Slot", slotSchema);

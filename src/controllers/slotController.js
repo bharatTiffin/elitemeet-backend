@@ -29,13 +29,13 @@ const getAvailableSlots = async (req, res, next) => {
  */
 const getAllSlots = async (req, res, next) => {
   try {
-    const { role, id: adminId } = req.user;
-    
+    const { role, id: adminFirebaseUid } = req.user;
+
     if (role !== "admin") {
       return res.status(403).json({ error: "Admin access required" });
     }
 
-    const slots = await Slot.find({ adminId }).sort({ startTime: 1 });
+    const slots = await Slot.find({ adminFirebaseUid }).sort({ startTime: 1 });
     res.json(slots);
   } catch (err) {
     next(err);
@@ -49,7 +49,7 @@ const getAllSlots = async (req, res, next) => {
  */
 const createSlots = async (req, res, next) => {
   try {
-    const { role, id: adminId } = req.user;
+    const { role, id: adminFirebaseUid } = req.user;
 
     if (role !== "admin") {
       return res.status(403).json({ error: "Only admin can create slots" });
@@ -76,7 +76,7 @@ const createSlots = async (req, res, next) => {
 
       // Check for overlapping slots
       const overlap = await Slot.findOne({
-        adminId,
+        adminFirebaseUid,
         $or: [
           { startTime: { $lt: endTime }, endTime: { $gt: startTime } }
         ]
@@ -89,7 +89,7 @@ const createSlots = async (req, res, next) => {
       }
 
       docs.push({
-        adminId,
+        adminFirebaseUid,
         startTime,
         endTime,
         duration,
@@ -111,14 +111,14 @@ const createSlots = async (req, res, next) => {
  */
 const updateSlot = async (req, res, next) => {
   try {
-    const { role, id: adminId } = req.user;
+    const { role, id: adminFirebaseUid } = req.user;
     const { id } = req.params;
 
     if (role !== "admin") {
       return res.status(403).json({ error: "Only admin can update slots" });
     }
 
-    const slot = await Slot.findOne({ _id: id, adminId });
+    const slot = await Slot.findOne({ _id: id, adminFirebaseUid });
 
     if (!slot) {
       return res.status(404).json({ error: "Slot not found" });
@@ -138,7 +138,7 @@ const updateSlot = async (req, res, next) => {
       // Check for overlapping slots (excluding current slot)
       const overlap = await Slot.findOne({
         _id: { $ne: id },
-        adminId,
+        adminFirebaseUid,
         $or: [
           { startTime: { $lt: newEndTime }, endTime: { $gt: newStartTime } }
         ]
@@ -172,14 +172,14 @@ const updateSlot = async (req, res, next) => {
  */
 const deleteSlot = async (req, res, next) => {
   try {
-    const { role, id: adminId } = req.user;
+    const { role, id: adminFirebaseUid } = req.user;
     const { id } = req.params;
 
     if (role !== "admin") {
       return res.status(403).json({ error: "Only admin can delete slots" });
     }
 
-    const slot = await Slot.findOne({ _id: id, adminId });
+    const slot = await Slot.findOne({ _id: id, adminFirebaseUid });
 
     if (!slot) {
       return res.status(404).json({ error: "Slot not found" });

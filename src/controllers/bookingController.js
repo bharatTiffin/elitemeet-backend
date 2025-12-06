@@ -15,10 +15,9 @@ const { sendEmail } = require("../utils/email");
 const createBooking = async (req, res, next) => {
   try {
     const { slotId, userName, userEmail, purpose } = req.body;
-    const userId = req.user.id;
+    const userFirebaseUid = req.user.id; // Firebase UID from auth middleware
 
     // 1. ATOMIC UPDATE: Check and lock slot in ONE operation
-    // This prevents race conditions when multiple users try to book same slot
     const slot = await Slot.findOneAndUpdate(
       {
         _id: slotId,
@@ -32,14 +31,13 @@ const createBooking = async (req, res, next) => {
       },
       {
         new: true, // Return updated document
-        populate: 'adminId', // Populate admin details
       }
     );
 
     // If slot is null, it means it was already taken or doesn't exist
     if (!slot) {
-      return res.status(400).json({ 
-        error: "Slot not available. It may have been booked by another user." 
+      return res.status(400).json({
+        error: "Slot not available. It may have been booked by another user."
       });
     }
 
@@ -51,16 +49,16 @@ const createBooking = async (req, res, next) => {
         receipt: `booking_${Date.now()}`,
         notes: {
           slotId: slot._id.toString(),
-          userId,
+          userFirebaseUid,
           userEmail,
         },
       });
 
-      // 3. Create booking with adminId
+      // 3. Create booking with Firebase UIDs
       const booking = await Booking.create({
-        userId,
+        userFirebaseUid,
         slotId,
-        adminId: slot.adminId._id,
+        adminFirebaseUid: slot.adminFirebaseUid,
         userName,
         userEmail,
         purpose: purpose || '',
@@ -112,9 +110,8 @@ const verifyPayment = async (req, res, next) => {
 
     // 2. Update booking
     const booking = await Booking.findOne({ razorpayOrderId: razorpay_order_id })
-      .populate('slotId')
-      .populate('userId');
-    
+      .populate('slotId');
+
     if (!booking) {
       return res.status(404).json({ error: "Booking not found" });
     }
@@ -142,145 +139,197 @@ const verifyPayment = async (req, res, next) => {
       {
         $set: {
           status: "booked",
-          bookedBy: booking.userId._id,
+          bookedByFirebaseUid: booking.userFirebaseUid,
         },
       },
       {
         new: true,
-        populate: 'adminId',
       }
     );
 
     if (!slot) {
       // This should rarely happen, but handle it gracefully
       console.error("Slot was not pending during payment verification");
-      return res.status(400).json({ 
-        error: "Payment verified but slot is no longer available" 
+      return res.status(400).json({
+        error: "Payment verified but slot is no longer available"
       });
     }
 
-    // 4. Get admin details
-    const admin = await User.findById(slot.adminId);
+    // 4. Get admin and user details
+    const admin = await User.findOne({ firebaseUid: slot.adminFirebaseUid });
+    const user = await User.findOne({ firebaseUid: booking.userFirebaseUid });
 
     // 5. Send confirmation emails (non-blocking)
     const emailPromises = [];
 
     // Email to User
-    emailPromises.push(
-      sendEmail({
-        to: booking.userEmail,
-        subject: "Booking Confirmed - Elite Meet",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2563eb;">Booking Confirmed! 🎉</h2>
-            <p>Hi ${booking.userName},</p>
+    if (user && user.email) {
+      emailPromises.push(
+        sendEmail({
+          to: booking.userEmail,
+          subject: "Booking Confirmed - Elite Meet",
+          html: `
+            <h2>Hi ${booking.userName},</h2>
             <p>Your consultation slot has been successfully booked.</p>
             
-            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0;">Booking Details</h3>
-              <p><strong>Date:</strong> ${new Date(slot.startTime).toLocaleDateString('en-IN', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}</p>
-              <p><strong>Time:</strong> ${new Date(slot.startTime).toLocaleTimeString('en-IN', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true 
-              })}</p>
-              <p><strong>Duration:</strong> ${slot.duration} minutes</p>
-              <p><strong>Amount Paid:</strong> ₹${booking.amount}</p>
-              <p><strong>Payment ID:</strong> ${razorpay_payment_id}</p>
-            </div>
+            <p><strong>Date:</strong> ${new Date(slot.startTime).toLocaleDateString('en-IN', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}</p>
+            
+            <p><strong>Time:</strong> ${new Date(slot.startTime).toLocaleTimeString('en-IN', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            })}</p>
+            
+            <p><strong>Duration:</strong> ${slot.duration} minutes</p>
+            <p><strong>Amount Paid:</strong> ₹${booking.amount}</p>
+            <p><strong>Payment ID:</strong> ${razorpay_payment_id}</p>
             
             <p>You will receive the meeting link 15 minutes before the scheduled time.</p>
             
             <p>Best regards,<br>Elite Meet Team</p>
-          </div>
-        `,
-      }).catch(err => console.error("Failed to send user email:", err))
-    );
+          `,
+        }).catch(err => console.error("Failed to send user email:", err))
+      );
+    }
 
     // Email to Admin
-    emailPromises.push(
-      sendEmail({
-        to: admin.email,
-        subject: "New Booking Received - Elite Meet",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2563eb;">New Booking Received 📅</h2>
-            <p>Hi ${admin.name},</p>
+    if (admin && admin.email) {
+      emailPromises.push(
+        sendEmail({
+          to: admin.email,
+          subject: "New Booking Received - Elite Meet",
+          html: `
+            <h2>Hi ${admin.name},</h2>
             <p>You have a new booking for your consultation slot.</p>
             
-            <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-              <h3 style="margin-top: 0;">Booking Details</h3>
-              <p><strong>Client Name:</strong> ${booking.userName}</p>
-              <p><strong>Client Email:</strong> ${booking.userEmail}</p>
-              ${booking.purpose ? `<p><strong>Purpose/Topic:</strong><br/>${booking.purpose}</p>` : ''}
-              <p><strong>Date:</strong> ${new Date(slot.startTime).toLocaleDateString('en-IN', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}</p>
-              <p><strong>Time:</strong> ${new Date(slot.startTime).toLocaleTimeString('en-IN', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true 
-              })}</p>
-              <p><strong>Duration:</strong> ${slot.duration} minutes</p>
-              <p><strong>Amount:</strong> ₹${booking.amount}</p>
-            </div>
+            <p><strong>Client Name:</strong> ${booking.userName}</p>
+            <p><strong>Client Email:</strong> ${booking.userEmail}</p>
+            ${booking.purpose ? `<p><strong>Purpose/Topic:</strong><br>${booking.purpose}</p>` : ''}
+            
+            <p><strong>Date:</strong> ${new Date(slot.startTime).toLocaleDateString('en-IN', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric'
+            })}</p>
+            
+            <p><strong>Time:</strong> ${new Date(slot.startTime).toLocaleTimeString('en-IN', {
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            })}</p>
+            
+            <p><strong>Duration:</strong> ${slot.duration} minutes</p>
+            <p><strong>Amount:</strong> ₹${booking.amount}</p>
             
             <p>Please prepare for the scheduled consultation.</p>
             
             <p>Best regards,<br>Elite Meet Team</p>
-          </div>
-        `,
-      }).catch(err => console.error("Failed to send admin email:", err))
-    );
+          `,
+        }).catch(err => console.error("Failed to send admin email:", err))
+      );
+    }
 
-    // Send emails in background
-    Promise.all(emailPromises).catch(err => 
-      console.error("Some emails failed to send:", err)
-    );
+    // Wait for emails (non-blocking, don't fail if emails fail)
+    Promise.all(emailPromises).catch(err => {
+      console.error("Error sending emails:", err);
+    });
 
     res.json({
       success: true,
-      message: "Payment verified and booking confirmed",
+      message: "Payment verified successfully",
       booking,
     });
   } catch (err) {
-    console.error("Payment verification error:", err);
     next(err);
   }
 };
 
 /**
  * POST /api/bookings/cancel-payment
- * Handle payment cancellation/failure
+ * Cancel a pending booking if payment fails
  */
 const cancelPayment = async (req, res, next) => {
   try {
-    const { razorpay_order_id } = req.body;
+    const { razorpayOrderId } = req.body;
 
-    // Find and cancel booking
-    const booking = await Booking.findOneAndUpdate(
-      { razorpayOrderId: razorpay_order_id },
-      { status: "cancelled" },
-      { new: true }
-    );
+    const booking = await Booking.findOne({ razorpayOrderId });
 
-    if (booking) {
-      // Release the slot back to free
-      await Slot.findByIdAndUpdate(booking.slotId, { 
-        status: "free",
-        bookedBy: null,
-      });
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
     }
 
+    if (booking.status !== "pending") {
+      return res.status(400).json({ error: "Booking is not in pending state" });
+    }
+
+    // Mark booking as cancelled
+    booking.status = "cancelled";
+    await booking.save();
+
+    // Free up the slot
+    await Slot.findByIdAndUpdate(booking.slotId, { status: "free" });
+
     res.json({ success: true, message: "Booking cancelled" });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * GET /api/bookings
+ * Get all bookings (Admin sees all, User sees only their bookings)
+ */
+const getAllBookings = async (req, res, next) => {
+  try {
+    const { role, id: firebaseUid } = req.user;
+
+    let query = {};
+
+    if (role === "admin") {
+      // Admin sees all their consultation bookings
+      query.adminFirebaseUid = firebaseUid;
+    } else {
+      // User sees only their own bookings
+      query.userFirebaseUid = firebaseUid;
+    }
+
+    const bookings = await Booking.find(query)
+      .populate('slotId')
+      .sort({ createdAt: -1 });
+
+    res.json(bookings);
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * GET /api/bookings/:id
+ * Get single booking details
+ */
+const getBookingById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { role, id: firebaseUid } = req.user;
+
+    const booking = await Booking.findById(id).populate('slotId');
+
+    if (!booking) {
+      return res.status(404).json({ error: "Booking not found" });
+    }
+
+    // Check authorization
+    if (role !== "admin" && booking.userFirebaseUid !== firebaseUid) {
+      return res.status(403).json({ error: "Unauthorized" });
+    }
+
+    res.json(booking);
   } catch (err) {
     next(err);
   }
@@ -290,4 +339,6 @@ module.exports = {
   createBooking,
   verifyPayment,
   cancelPayment,
+  getAllBookings,
+  getBookingById,
 };

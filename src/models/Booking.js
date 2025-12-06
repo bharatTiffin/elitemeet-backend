@@ -4,21 +4,19 @@ const mongoose = require("mongoose");
 
 const bookingSchema = new mongoose.Schema(
   {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    userFirebaseUid: {  // Changed from userId
+      type: String,     // Changed from ObjectId to String
       required: true,
       index: true,
     },
     slotId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,  // Keep this as ObjectId
       ref: "Slot",
       required: true,
       index: true,
     },
-    adminId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    adminFirebaseUid: {  // Changed from adminId
+      type: String,      // Changed from ObjectId to String
       required: false,
     },
     userName: {
@@ -67,16 +65,15 @@ const bookingSchema = new mongoose.Schema(
 );
 
 // Index for faster queries
-bookingSchema.index({ userId: 1, createdAt: -1 });
+bookingSchema.index({ userFirebaseUid: 1, createdAt: -1 });
 bookingSchema.index({ status: 1, expiresAt: 1 });
 
 // 🔥 MONGODB TTL INDEX - Auto-deletes expired pending bookings
-// This runs automatically in the background, no cron job needed!
 bookingSchema.index(
   { expiresAt: 1 },
   {
-    expireAfterSeconds: 0, // Delete immediately after expiresAt time
-    partialFilterExpression: { status: "pending" } // Only delete pending bookings
+    expireAfterSeconds: 0,
+    partialFilterExpression: { status: "pending" }
   }
 );
 
