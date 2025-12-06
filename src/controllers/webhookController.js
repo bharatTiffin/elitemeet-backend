@@ -7,8 +7,12 @@ const { sendEmail } = require("../utils/email");
 
 const handleRazorpayWebhook = async (req, res) => {
   try {
+    console.log("handleRazorpayWebhook")
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
     const signature = req.headers["x-razorpay-signature"];
+
+    console.log("secret: ",secret)
+    console.log("signature: ",signature)
 
     // ✅ Handle different body formats safely
     let body;
