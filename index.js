@@ -1,75 +1,38 @@
-// index.js
-require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const morgan = require("morgan");
-const cron = require("node-cron");
-const connectDB = require("./src/config/db");
-const { cleanupExpiredSlots } = require("./src/utils/cleanupExpiredSlots");
-
-// Routes
-const authRoutes = require("./src/routes/authRoutes");
-const slotRoutes = require("./src/routes/slotRoutes");
-const bookingRoutes = require("./src/routes/bookingRoutes");
-const paymentRoutes = require("./src/routes/paymentRoutes");
-const webhookRoutes = require("./src/routes/webhookRoutes");
+const connectDB = require("./config/db");
+require("dotenv").config();
 
 const app = express();
 
-// Connect to MongoDB
+// Database connection
 connectDB();
 
-// CORS Middleware
-app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'http://localhost:5173',
-    'http://192.168.18.15:5173',
-    'https://financial-statement-tracker.vercel.app',
-  ],
-  credentials: true
-}));
-
-// Webhook route BEFORE body parser (needs raw body)
-app.use("/api/webhooks", webhookRoutes);
-
-// Body parser middleware (after webhook routes)
+// Middleware
+app.use(cors());
 app.use(express.json());
-app.use(morgan("dev"));
+app.use(express.urlencoded({ extended: true }));
 
 // Health check
 app.get("/", (req, res) => {
-  res.json({ message: "API is running ✅" });
+  res.json({ message: "Elite Meet API is running" });
 });
 
-// API routes
-app.use("/api/auth", authRoutes);
-app.use("/api/slots", slotRoutes);
-app.use("/api/bookings", bookingRoutes);
-app.use("/api/payments", paymentRoutes);
+// 🔥 ROUTES - Make sure auth routes are registered!
+app.use("/api/auth", require("./routes/authRoutes"));
+app.use("/api/slots", require("./routes/slotRoutes"));
+app.use("/api/bookings", require("./routes/bookingRoutes"));
+app.use("/api/payments", require("./routes/paymentRoutes"));
+app.use("/api/webhook", require("./routes/webhookRoutes"));
+app.use("/api/cron", require("./routes/cronRoutes"));
 
-// 404 handler
-app.use((req, res, next) => {
-  res.status(404).json({ error: "Route not found" });
-});
-
-// Error handler
+// Error handling
 app.use((err, req, res, next) => {
-  console.error("Error:", err);
-  res.status(err.status || 500).json({
-    error: err.message || "Internal Server Error",
-  });
+  console.error(err.stack);
+  res.status(500).json({ error: err.message || "Something went wrong!" });
 });
 
-// Cron job: Run every 2 minutes to cleanup expired slots
-cron.schedule("*/2 * * * *", async () => {
-  console.log("Running cleanup job...");
-  await cleanupExpiredSlots();
-});
-
-// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log("Cron job scheduled for slot cleanup every 2 minutes");
+  console.log(`✅ Server running on port ${PORT}`);
 });
