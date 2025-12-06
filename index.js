@@ -8,14 +8,23 @@ const app = express();
 // Database connection
 connectDB();
 
-// Middleware
-// app.use(cors());
+// 🔥 FIXED CORS - Allow both localhost and Vercel frontend
 app.use(cors({
-  origin: true, // Allow all origins (NOT RECOMMENDED FOR PRODUCTION!)
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:3000', 
+    'http://localhost:5174',
+    'https://elitemeet-frontend.vercel.app', // Add your actual Vercel frontend URL
+    /\.vercel\.app$/ // Allow all Vercel preview deployments
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Length', 'X-Requested-With']
 }));
+
+// ❌ REMOVE THIS LINE - it's causing the error
+// app.options('*', cors());
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -25,7 +34,7 @@ app.get("/", (req, res) => {
   res.json({ message: "Elite Meet API is running" });
 });
 
-// 🔥 ROUTES - Make sure auth routes are registered!
+// 🔥 ROUTES
 app.use("/api/auth", require("./src/routes/authRoutes"));
 app.use("/api/slots", require("./src/routes/slotRoutes"));
 app.use("/api/bookings", require("./src/routes/bookingRoutes"));
