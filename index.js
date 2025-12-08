@@ -11,6 +11,8 @@ connectDB();
 // CORS configuration
 app.use(cors({
   origin: [
+    'https://www.eliteacademy.pro',
+    'https://eliteacademy.pro',
     'http://localhost:5173', 
     'http://localhost:3000', 
     'http://localhost:5174',
