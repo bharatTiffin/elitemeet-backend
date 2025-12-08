@@ -7,24 +7,29 @@ const { sendEmail } = require("../utils/email");
 
 const handleRazorpayWebhook = async (req, res) => {
   try {
-    console.log("handleRazorpayWebhook")
+    console.log("handleRazorpayWebhook");
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
     const signature = req.headers["x-razorpay-signature"];
 
-    console.log("secret: ",secret)
-    console.log("signature: ",signature)
+    console.log("secret: ", secret);
+    console.log("signature: ", signature);
 
     // ✅ Handle different body formats safely
-    let body;
+    let bodyString;
+    let event;
+
     if (Buffer.isBuffer(req.body)) {
       // Raw buffer (ideal case from express.raw())
-      body = req.body.toString();
-    } else if (typeof req.body === 'string') {
+      bodyString = req.body.toString("utf-8");
+      event = JSON.parse(bodyString);
+    } else if (typeof req.body === "string") {
       // Already stringified
-      body = req.body;
-    } else if (typeof req.body === 'object') {
+      bodyString = req.body;
+      event = JSON.parse(bodyString);
+    } else if (typeof req.body === "object" && req.body !== null) {
       // Already parsed as JSON (Vercel might do this)
-      body = JSON.stringify(req.body);
+      bodyString = JSON.stringify(req.body);
+      event = req.body;
     } else {
       console.error("❌ Unexpected body type:", typeof req.body);
       return res.status(400).send("Invalid body format");
@@ -33,7 +38,7 @@ const handleRazorpayWebhook = async (req, res) => {
     // Verify signature
     const expectedSignature = crypto
       .createHmac("sha256", secret)
-      .update(body)
+      .update(bodyString)
       .digest("hex");
 
     if (expectedSignature !== signature) {
@@ -44,9 +49,7 @@ const handleRazorpayWebhook = async (req, res) => {
     }
 
     console.log("✅ Webhook signature verified");
-
-    // Parse event (handle both cases)
-    const event = typeof req.body === 'object' ? req.body : JSON.parse(body);
+    console.log("📦 Webhook event type:", event?.event);
 
     if (event.event === "payment.captured") {
       const paymentEntity = event.payload.payment.entity;
