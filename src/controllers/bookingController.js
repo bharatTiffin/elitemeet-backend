@@ -345,6 +345,7 @@ const verifyPayment = async (req, res, next) => {
               <p>Your consultation slot has been successfully booked.</p>
               
               <p><strong>Date:</strong> ${new Date(slot.startTime).toLocaleDateString('en-IN', {
+                timeZone: 'Asia/Kolkata',
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -352,6 +353,7 @@ const verifyPayment = async (req, res, next) => {
               })}</p>
               
               <p><strong>Time:</strong> ${new Date(slot.startTime).toLocaleTimeString('en-IN', {
+                timeZone: 'Asia/Kolkata',
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true
@@ -385,6 +387,7 @@ const verifyPayment = async (req, res, next) => {
               ${booking.purpose ? `<p><strong>Purpose/Topic:</strong><br>${booking.purpose}</p>` : ''}
               
               <p><strong>Date:</strong> ${new Date(slot.startTime).toLocaleDateString('en-IN', {
+                timeZone: 'Asia/Kolkata',
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
@@ -392,6 +395,7 @@ const verifyPayment = async (req, res, next) => {
               })}</p>
               
               <p><strong>Time:</strong> ${new Date(slot.startTime).toLocaleTimeString('en-IN', {
+                timeZone: 'Asia/Kolkata',
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true

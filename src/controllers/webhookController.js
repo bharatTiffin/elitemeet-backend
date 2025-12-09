@@ -109,12 +109,14 @@ const handleRazorpayWebhook = async (req, res) => {
               <h2>Booking Confirmed! 🎉</h2>
               <p>Your consultation slot has been successfully booked.</p>
               <p><strong>Date:</strong> ${new Date(slot.startTime).toLocaleDateString('en-IN', {
+                timeZone: 'Asia/Kolkata',
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
               })}</p>
               <p><strong>Time:</strong> ${new Date(slot.startTime).toLocaleTimeString('en-IN', {
+                timeZone: 'Asia/Kolkata',
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true
@@ -142,12 +144,14 @@ const handleRazorpayWebhook = async (req, res) => {
               <p><strong>Client Email:</strong> ${booking.userEmail}</p>
               ${booking.purpose ? `<p><strong>Purpose/Topic:</strong> ${booking.purpose}</p>` : ''}
               <p><strong>Date:</strong> ${new Date(slot.startTime).toLocaleDateString('en-IN', {
+                timeZone: 'Asia/Kolkata',
                 weekday: 'long',
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
               })}</p>
               <p><strong>Time:</strong> ${new Date(slot.startTime).toLocaleTimeString('en-IN', {
+                timeZone: 'Asia/Kolkata',
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: true
