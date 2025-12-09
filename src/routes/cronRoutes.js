@@ -6,11 +6,16 @@ const { cleanupExpiredSlots } = require("../utils/cleanupExpiredSlots");
 router.get("/cleanup", async (req, res) => {
   try {
     console.log("Cron cleanup started");
+
     // Verify cron secret for security
     const authHeader = req.headers.authorization;
-    console.log("Auth header:", authHeader);
-    console.log("CRON_SECRET:", process.env.CRON_SECRET);
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    const tokenFromHeader = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : null;
+    const tokenFromQuery = req.query.token;
+    const token = tokenFromHeader || tokenFromQuery;
+
+    if (token !== process.env.CRON_SECRET) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
