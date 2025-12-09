@@ -86,7 +86,7 @@ const handleRazorpayWebhook = async (req, res) => {
         {
           $set: {
             status: "booked",
-            bookedByFirebaseUid: booking.userFirebaseUid,
+            bookedBy: booking.userFirebaseUid,
           },
         }
       );
@@ -177,6 +177,31 @@ const handleRazorpayWebhook = async (req, res) => {
       });
 
       console.log("✅ Webhook processed successfully:", booking._id);
+    } else if (event.event === "payment.failed") {
+      const paymentEntity = event.payload.payment.entity;
+      const orderId = paymentEntity.order_id;
+
+      console.log("⚠️ Handling payment.failed for order:", orderId);
+
+      const booking = await Booking.findOne({ razorpayOrderId: orderId });
+
+      if (!booking) {
+        console.warn("⚠️ Booking not found for failed payment", orderId);
+        return res.json({ status: "ok" });
+      }
+
+      // Only revert pending bookings
+      if (booking.status === "pending") {
+        booking.status = "cancelled";
+        await booking.save();
+
+        await Slot.findOneAndUpdate(
+          { _id: booking.slotId, status: "pending" },
+          { $set: { status: "free", bookedBy: null } }
+        );
+
+        console.log("✅ Released slot after payment failure:", booking.slotId.toString());
+      }
     }
 
     res.json({ status: "ok" });

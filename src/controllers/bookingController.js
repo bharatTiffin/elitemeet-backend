@@ -306,7 +306,7 @@ const verifyPayment = async (req, res, next) => {
       {
         $set: {
           status: "booked",
-          bookedByFirebaseUid: booking.userFirebaseUid,
+          bookedBy: booking.userFirebaseUid,
         },
       },
       {
@@ -454,7 +454,7 @@ const cancelPayment = async (req, res, next) => {
     await booking.save();
 
     // Free up the slot
-    await Slot.findByIdAndUpdate(booking.slotId, { status: "free" });
+    await Slot.findByIdAndUpdate(booking.slotId, { status: "free", bookedBy: null });
 
     res.json({ success: true, message: "Booking cancelled" });
   } catch (err) {
