@@ -155,15 +155,15 @@ const handleRazorpayWebhook = async (req, res) => {
               to: enrollment.userEmail,
               subject: "Mentorship Program Enrollment Confirmed - Elite Meet",
               html: `
-                <h2>Welcome to the 6-Month Full Mentor Guidance Program! 🎉</h2>
+                <h2>Welcome to the Full Mentor Guidance Program! 🎉</h2>
                 <p>Dear ${enrollment.userName},</p>
                 <p>Congratulations! Your enrollment in our premium mentorship program has been confirmed.</p>
                 <p><strong>Program Details:</strong></p>
                 <ul>
-                  <li>6-month full mentor guidance with Happy</li>
+                  <li>full mentor guidance with Happy</li>
                   <li>Regular feedback and guidance</li>
                   <li>Personalized sessions</li>
-                  <li>6-month commitment</li>
+                  <li>Full commitment</li>
                   <li>Dedicated support</li>
                 </ul>
                 <p><strong>Amount Paid:</strong> ₹${enrollment.amount}</p>
