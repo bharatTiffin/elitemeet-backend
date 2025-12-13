@@ -3,6 +3,8 @@ const crypto = require("crypto");
 const Booking = require("../models/Booking");
 const Slot = require("../models/Slot");
 const User = require("../models/User");
+const MentorshipEnrollment = require("../models/MentorshipEnrollment");
+const MentorshipProgram = require("../models/MentorshipProgram");
 const { sendEmail } = require("../utils/email");
 
 const handleRazorpayWebhook = async (req, res) => {
@@ -58,7 +60,116 @@ const handleRazorpayWebhook = async (req, res) => {
 
       console.log("💰 Processing payment.captured for order:", orderId);
 
-      // Find booking and populate slot details
+      // Check if it's a mentorship enrollment
+      const enrollment = await MentorshipEnrollment.findOne({ razorpayOrderId: orderId });
+
+      if (enrollment) {
+        // Handle mentorship enrollment
+        console.log("🎓 Processing mentorship enrollment payment");
+
+        // Prevent duplicate processing
+        if (enrollment.status === "confirmed") {
+          console.log("ℹ️ Enrollment already confirmed:", enrollment._id);
+          return res.json({ status: "ok" });
+        }
+
+        // Update enrollment
+        enrollment.status = "confirmed";
+        enrollment.razorpayPaymentId = paymentId;
+        await enrollment.save();
+
+        // Update program enrolled count
+        const program = await MentorshipProgram.getProgram();
+        program.enrolledCount += 1;
+        await program.save();
+
+        console.log("📧 Sending mentorship enrollment confirmation emails...");
+
+        // Get admin details (first admin user)
+        const admin = await User.findOne({ role: "admin" });
+
+        // ✅ SEND EMAILS
+        const emailPromises = [];
+
+        // Email to User
+        if (enrollment.userEmail) {
+          emailPromises.push(
+            sendEmail({
+              to: enrollment.userEmail,
+              subject: "Mentorship Program Enrollment Confirmed - Elite Meet",
+              html: `
+                <h2>Welcome to the 6-Month Full Mentor Guidance Program! 🎉</h2>
+                <p>Dear ${enrollment.userName},</p>
+                <p>Congratulations! Your enrollment in our premium mentorship program has been confirmed.</p>
+                <p><strong>Program Details:</strong></p>
+                <ul>
+                  <li>6-month full mentor guidance with Happy</li>
+                  <li>Regular feedback and guidance</li>
+                  <li>Personalized sessions</li>
+                  <li>6-month commitment</li>
+                  <li>Dedicated support</li>
+                </ul>
+                <p><strong>Amount Paid:</strong> ₹${enrollment.amount}</p>
+                <p><strong>Payment ID:</strong> ${paymentId}</p>
+                <p><strong>Enrollment Date:</strong> ${new Date(enrollment.enrollmentDate).toLocaleDateString('en-IN', {
+                  timeZone: 'Asia/Kolkata',
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</p>
+                <p>You will receive further instructions and access details via email shortly.</p>
+                <p>We're excited to have you on this journey!</p>
+                <p>Best regards,<br>Elite Meet Team</p>
+              `,
+            })
+          );
+        }
+
+        // Email to Admin
+        if (admin && admin.email) {
+          emailPromises.push(
+            sendEmail({
+              to: admin.email,
+              subject: "New Mentorship Program Enrollment - Elite Meet",
+              html: `
+                <h2>New Mentorship Enrollment! 🎓</h2>
+                <p>You have a new enrollment in the mentorship program.</p>
+                <p><strong>Student Name:</strong> ${enrollment.userName}</p>
+                <p><strong>Student Email:</strong> ${enrollment.userEmail}</p>
+                <p><strong>Amount:</strong> ₹${enrollment.amount}</p>
+                <p><strong>Payment ID:</strong> ${paymentId}</p>
+                <p><strong>Enrollment Date:</strong> ${new Date(enrollment.enrollmentDate).toLocaleDateString('en-IN', {
+                  timeZone: 'Asia/Kolkata',
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</p>
+                <p><strong>Remaining Seats:</strong> ${program.totalSeats - program.enrolledCount}</p>
+                <p>Please reach out to the student to begin their mentorship journey.</p>
+                <p>Best regards,<br>Elite Meet Team</p>
+              `,
+            })
+          );
+        }
+
+        // Send emails (non-blocking, catch errors)
+        const results = await Promise.allSettled(emailPromises);
+        
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            console.log(`✅ Email ${index + 1} sent successfully`);
+          } else {
+            console.error(`❌ Email ${index + 1} failed:`, result.reason);
+          }
+        });
+
+        console.log("✅ Mentorship enrollment webhook processed successfully:", enrollment._id);
+        return res.json({ status: "ok" });
+      }
+
+      // Handle regular booking
       const booking = await Booking.findOne({ razorpayOrderId: orderId })
         .populate('slotId');
 
@@ -183,6 +294,20 @@ const handleRazorpayWebhook = async (req, res) => {
 
       console.log("⚠️ Handling payment.failed for order:", orderId);
 
+      // Check if it's a mentorship enrollment
+      const enrollment = await MentorshipEnrollment.findOne({ razorpayOrderId: orderId });
+
+      if (enrollment) {
+        // Handle mentorship enrollment failure
+        if (enrollment.status === "pending") {
+          enrollment.status = "cancelled";
+          await enrollment.save();
+          console.log("✅ Cancelled mentorship enrollment after payment failure:", enrollment._id);
+        }
+        return res.json({ status: "ok" });
+      }
+
+      // Handle regular booking failure
       const booking = await Booking.findOne({ razorpayOrderId: orderId });
 
       if (!booking) {
