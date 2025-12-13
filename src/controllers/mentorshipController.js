@@ -57,15 +57,15 @@ const createEnrollment = async (req, res, next) => {
       return res.status(400).json({ error: "No seats available. All seats are booked." });
     }
 
-    // Check if user already enrolled
+    // Check if user already has a CONFIRMED enrollment (only block if payment was successful)
     const existingEnrollment = await MentorshipEnrollment.findOne({
       userFirebaseUid: user.id,
-      status: { $in: ["pending", "confirmed"] },
+      status: "confirmed",
     });
 
     if (existingEnrollment) {
       return res.status(400).json({ 
-        error: "You already have an active enrollment. Please complete or cancel your existing enrollment first." 
+        error: "You already have an active enrollment in the mentorship program." 
       });
     }
 
@@ -121,17 +121,9 @@ const createEnrollment = async (req, res, next) => {
       });
     }
 
-    // Create enrollment record
-    const enrollment = new MentorshipEnrollment({
-      userFirebaseUid: user.id,
-      userName: user.name || userDoc.name,
-      userEmail: user.email || userDoc.email,
-      amount: program.price,
-      razorpayOrderId: order.id,
-      status: "pending",
-    });
-
-    await enrollment.save();
+    // Don't create enrollment here - wait for payment to be successful
+    // Enrollment will be created in webhook when payment is captured
+    // This way, if user cancels payment, no enrollment record blocks future attempts
 
     res.json({
       success: true,
@@ -141,10 +133,7 @@ const createEnrollment = async (req, res, next) => {
         currency: order.currency,
         receipt: order.receipt,
       },
-      enrollment: {
-        id: enrollment._id,
-        amount: enrollment.amount,
-      },
+      message: "Payment order created. Complete payment to enroll.",
     });
   } catch (err) {
     console.error("Error creating enrollment:", err);

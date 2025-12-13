@@ -60,28 +60,85 @@ const handleRazorpayWebhook = async (req, res) => {
 
       console.log("💰 Processing payment.captured for order:", orderId);
 
-      // Check if it's a mentorship enrollment
-      const enrollment = await MentorshipEnrollment.findOne({ razorpayOrderId: orderId });
+      // Check if it's a mentorship enrollment by checking order notes
+      // First, get the order to check its notes
+      const Razorpay = require("razorpay");
+      const razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+      });
 
-      if (enrollment) {
+      let orderDetails;
+      try {
+        orderDetails = await razorpay.orders.fetch(orderId);
+      } catch (err) {
+        console.error("Error fetching order:", err);
+        // Continue with existing logic if order fetch fails
+      }
+
+      const isMentorshipEnrollment = orderDetails?.notes?.type === "mentorship_enrollment" ||
+                                     (await MentorshipEnrollment.findOne({ razorpayOrderId: orderId }));
+
+      if (isMentorshipEnrollment) {
         // Handle mentorship enrollment
         console.log("🎓 Processing mentorship enrollment payment");
 
-        // Prevent duplicate processing
-        if (enrollment.status === "confirmed") {
-          console.log("ℹ️ Enrollment already confirmed:", enrollment._id);
-          return res.json({ status: "ok" });
+        // Get program (needed for amount and email)
+        const program = await MentorshipProgram.getProgram();
+        
+        // Find or create enrollment
+        let enrollment = await MentorshipEnrollment.findOne({ razorpayOrderId: orderId });
+        let isNewEnrollment = false;
+
+        if (enrollment) {
+          // Prevent duplicate processing
+          if (enrollment.status === "confirmed") {
+            console.log("ℹ️ Enrollment already confirmed:", enrollment._id);
+            return res.json({ status: "ok" });
+          }
+
+          // Update existing enrollment
+          enrollment.status = "confirmed";
+          enrollment.razorpayPaymentId = paymentId;
+          await enrollment.save();
+        } else {
+          // Create new enrollment from order notes (payment was successful)
+          if (!orderDetails || !orderDetails.notes) {
+            console.error("❌ Cannot create enrollment: order details or notes missing");
+            return res.status(400).json({ error: "Order details missing" });
+          }
+
+          const userFirebaseUid = orderDetails.notes.userFirebaseUid;
+          const userName = orderDetails.notes.userName;
+          const userEmail = orderDetails.notes.userEmail;
+
+          if (!userFirebaseUid || !userEmail) {
+            console.error("❌ Cannot create enrollment: missing user info in order notes");
+            return res.status(400).json({ error: "User information missing" });
+          }
+          
+          // Create enrollment record (only after successful payment)
+          enrollment = new MentorshipEnrollment({
+            userFirebaseUid: userFirebaseUid,
+            userName: userName,
+            userEmail: userEmail,
+            amount: program.price,
+            razorpayOrderId: orderId,
+            razorpayPaymentId: paymentId,
+            status: "confirmed", // Directly confirmed since payment is successful
+          });
+
+          await enrollment.save();
+          isNewEnrollment = true;
+          console.log("✅ Created new enrollment after successful payment:", enrollment._id);
         }
 
-        // Update enrollment
-        enrollment.status = "confirmed";
-        enrollment.razorpayPaymentId = paymentId;
-        await enrollment.save();
-
-        // Update program enrolled count
-        const program = await MentorshipProgram.getProgram();
-        program.enrolledCount += 1;
-        await program.save();
+        // Update program enrolled count only for new enrollments
+        if (isNewEnrollment) {
+          program.enrolledCount += 1;
+          await program.save();
+          console.log("📊 Updated program enrolled count:", program.enrolledCount);
+        }
 
         console.log("📧 Sending mentorship enrollment confirmation emails...");
 
