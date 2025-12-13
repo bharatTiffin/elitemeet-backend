@@ -94,10 +94,15 @@ const createEnrollment = async (req, res, next) => {
     }
 
     // Create Razorpay order
+    // Receipt must be max 40 characters - use shortened format
+    const timestamp = Date.now().toString().slice(-10); // Last 10 digits
+    const userIdShort = user.id.substring(0, 8); // First 8 chars of Firebase UID
+    const receipt = `ment_${timestamp}_${userIdShort}`; // Total: ~22 chars, well under 40
+    
     const options = {
       amount: program.price * 100, // Convert to paise
       currency: "INR",
-      receipt: `mentorship_${Date.now()}_${user.id}`,
+      receipt: receipt,
       notes: {
         type: "mentorship_enrollment",
         userFirebaseUid: user.id,
