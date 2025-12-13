@@ -69,10 +69,28 @@ const createEnrollment = async (req, res, next) => {
       });
     }
 
-    // Get user details from MongoDB
-    const userDoc = await User.findOne({ firebaseUid: user.id });
-    if (!userDoc) {
-      return res.status(404).json({ error: "User not found" });
+    // Get or create user in MongoDB (auto-sync if doesn't exist)
+    const userDoc = await User.findOneAndUpdate(
+      { firebaseUid: user.id },
+      {
+        firebaseUid: user.id,
+        email: user.email,
+        name: user.name || user.email?.split('@')[0] || 'User',
+        role: 'user',
+      },
+      {
+        upsert: true,
+        new: true,
+        setDefaultsOnInsert: true,
+      }
+    );
+
+    // Validate Razorpay credentials
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+      console.error("Razorpay credentials missing");
+      return res.status(500).json({ 
+        error: "Payment service configuration error. Please contact support." 
+      });
     }
 
     // Create Razorpay order
@@ -88,7 +106,15 @@ const createEnrollment = async (req, res, next) => {
       },
     };
 
-    const order = await razorpay.orders.create(options);
+    let order;
+    try {
+      order = await razorpay.orders.create(options);
+    } catch (razorpayError) {
+      console.error("Razorpay order creation error:", razorpayError);
+      return res.status(500).json({ 
+        error: "Failed to create payment order. Please try again or contact support." 
+      });
+    }
 
     // Create enrollment record
     const enrollment = new MentorshipEnrollment({
@@ -117,6 +143,22 @@ const createEnrollment = async (req, res, next) => {
     });
   } catch (err) {
     console.error("Error creating enrollment:", err);
+    
+    // Provide more specific error messages
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ 
+        error: "Validation error: " + err.message 
+      });
+    }
+    
+    if (err.name === 'MongoError' || err.name === 'MongoServerError') {
+      console.error("Database error:", err);
+      return res.status(500).json({ 
+        error: "Database error. Please try again later." 
+      });
+    }
+    
+    // For other errors, pass to error handler
     next(err);
   }
 };
