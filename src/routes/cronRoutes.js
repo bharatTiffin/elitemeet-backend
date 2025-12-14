@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { cleanupExpiredSlots } = require("../utils/cleanupExpiredSlots");
+const { fixConfirmedBookings } = require("../utils/fixConfirmedBookings");
 
 // This route will be called by Vercel Cron
 router.get("/cleanup", async (req, res) => {
@@ -25,6 +26,33 @@ router.get("/cleanup", async (req, res) => {
     res.json({ success: true, ...result });
   } catch (error) {
     console.error("Cron cleanup error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Fix confirmed bookings endpoint (can be called by cron or manually with secret)
+router.get("/fix-confirmed", async (req, res) => {
+  try {
+    console.log("Fix confirmed bookings started");
+
+    // Verify cron secret for security
+    const authHeader = req.headers.authorization;
+    const tokenFromHeader = authHeader?.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : null;
+    const tokenFromQuery = req.query.token;
+    const token = tokenFromHeader || tokenFromQuery;
+
+    if (token !== process.env.CRON_SECRET) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    console.log("fixConfirmedBookings function called!!");
+    const result = await fixConfirmedBookings();
+    console.log("Fix confirmed bookings result:", result);
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error("Fix confirmed bookings error:", error);
     res.status(500).json({ error: error.message });
   }
 });
