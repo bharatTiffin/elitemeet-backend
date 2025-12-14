@@ -297,11 +297,11 @@ const verifyPayment = async (req, res, next) => {
     booking.status = "confirmed";
     await booking.save();
 
-    // 3. ATOMIC UPDATE: Mark slot as booked (only if it's still pending)
+    // 3. ATOMIC UPDATE: Mark slot as booked (regardless of current status)
+    // This ensures the slot is marked as booked even if cleanup robot changed it to "free"
     const slot = await Slot.findOneAndUpdate(
       {
         _id: booking.slotId._id,
-        status: "pending", // Only update if still pending
       },
       {
         $set: {
@@ -316,11 +316,13 @@ const verifyPayment = async (req, res, next) => {
 
     if (!slot) {
       // This should rarely happen, but handle it gracefully
-      console.error("Slot was not pending during payment verification");
+      console.error("Slot not found during payment verification");
       return res.status(400).json({
-        error: "Payment verified but slot is no longer available"
+        error: "Payment verified but slot not found"
       });
     }
+
+    console.log("✅ Slot marked as booked:", slot._id);
 
     // 4. Get admin and user details
     const admin = await User.findOne({ firebaseUid: slot.adminFirebaseUid });

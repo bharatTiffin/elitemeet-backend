@@ -59,6 +59,8 @@ const handleRazorpayWebhook = async (req, res) => {
       const paymentId = paymentEntity.id;
 
       console.log("💰 Processing payment.captured for order:", orderId);
+      console.log("💰 Payment ID:", paymentId);
+      console.log("💰 Payment amount:", paymentEntity.amount ? paymentEntity.amount / 100 : "N/A");
 
       // Check if it's a mentorship enrollment by checking order notes
       // First, get the order to check its notes
@@ -232,8 +234,15 @@ const handleRazorpayWebhook = async (req, res) => {
 
       if (!booking) {
         console.warn("⚠️ Booking not found for order", orderId);
+        console.warn("⚠️ Searching for booking with orderId:", orderId);
         return res.json({ status: "ok" });
       }
+
+      console.log("✅ Found booking:", booking._id);
+      console.log("✅ Booking status:", booking.status);
+      console.log("✅ Booking amount:", booking.amount);
+      console.log("✅ Slot ID:", booking.slotId?._id);
+      console.log("✅ Slot status:", booking.slotId?.status);
 
       // Prevent duplicate processing
       if (booking.status === "confirmed") {
@@ -248,16 +257,24 @@ const handleRazorpayWebhook = async (req, res) => {
 
       const slot = booking.slotId;
 
-      // ATOMIC UPDATE: Mark slot as booked
-      await Slot.findOneAndUpdate(
-        { _id: slot._id, status: "pending" },
+      // ATOMIC UPDATE: Mark slot as booked (regardless of current status)
+      // This ensures the slot is marked as booked even if cleanup robot changed it to "free"
+      const slotUpdateResult = await Slot.findOneAndUpdate(
+        { _id: slot._id },
         {
           $set: {
             status: "booked",
             bookedBy: booking.userFirebaseUid,
           },
-        }
+        },
+        { new: true }
       );
+
+      if (!slotUpdateResult) {
+        console.warn("⚠️ Slot not found for booking:", booking._id);
+      } else {
+        console.log("✅ Slot marked as booked:", slot._id, "Previous status:", slot.status);
+      }
 
       // Fetch admin details
       const admin = await User.findOne({ firebaseUid: slot.adminFirebaseUid });
