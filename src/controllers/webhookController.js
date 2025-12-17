@@ -121,12 +121,24 @@ const handleRazorpayWebhook = async (req, res) => {
             return res.status(400).json({ error: "User information missing" });
           }
           
+          // Get PDF price from environment variable
+          const getPDFPrice = () => {
+            const price = process.env.PDF_PRICE;
+            if (price) {
+              const parsedPrice = parseInt(price, 10);
+              if (!isNaN(parsedPrice) && parsedPrice > 0) {
+                return parsedPrice;
+              }
+            }
+            return 99; // Default price
+          };
+          
           // Create purchase record (only after successful payment)
           purchase = new PDFPurchase({
             userFirebaseUid: userFirebaseUid,
             userName: userName,
             userEmail: userEmail,
-            amount: 99, // PDF price
+            amount: getPDFPrice(), // PDF price from env
             razorpayOrderId: orderId,
             razorpayPaymentId: paymentId,
             status: "confirmed", // Directly confirmed since payment is successful

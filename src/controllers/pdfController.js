@@ -8,7 +8,17 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
-const PDF_PRICE = 99; // 99 rupees
+// Get PDF price from environment variable, default to 99 if not set
+const getPDFPrice = () => {
+  const price = process.env.PDF_PRICE;
+  if (price) {
+    const parsedPrice = parseInt(price, 10);
+    if (!isNaN(parsedPrice) && parsedPrice > 0) {
+      return parsedPrice;
+    }
+  }
+  return 99; // Default price
+};
 
 /**
  * GET /api/pdf/info
@@ -21,7 +31,7 @@ const getPDFInfo = async (req, res, next) => {
       pdf: {
         name: "Elite Academy Magazine",
         description: "PSSSB Exam Preparation Guide",
-        price: PDF_PRICE,
+        price: getPDFPrice(),
         features: [
           "Sports - 10 pages",
           "Index - 10 pages",
@@ -80,8 +90,10 @@ const createPurchase = async (req, res, next) => {
     const userIdShort = user.id.substring(0, 8);
     const receipt = `pdf_${timestamp}_${userIdShort}`;
     
+    const pdfPrice = getPDFPrice();
+    
     const options = {
-      amount: PDF_PRICE * 100, // Convert to paise
+      amount: pdfPrice * 100, // Convert to paise
       currency: "INR",
       receipt: receipt,
       notes: {
