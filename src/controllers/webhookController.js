@@ -1,11 +1,13 @@
 // src/controllers/webhookController.js
 const crypto = require("crypto");
+const path = require("path");
 const Booking = require("../models/Booking");
 const Slot = require("../models/Slot");
 const User = require("../models/User");
 const MentorshipEnrollment = require("../models/MentorshipEnrollment");
 const MentorshipProgram = require("../models/MentorshipProgram");
-const { sendEmail } = require("../utils/email");
+const PDFPurchase = require("../models/PDFPurchase");
+const { sendEmail, sendEmailWithPDF } = require("../utils/email");
 
 const handleRazorpayWebhook = async (req, res) => {
   try {
@@ -78,8 +80,151 @@ const handleRazorpayWebhook = async (req, res) => {
         // Continue with existing logic if order fetch fails
       }
 
+      const isPDFPurchase = orderDetails?.notes?.type === "pdf_purchase" ||
+                            (await PDFPurchase.findOne({ razorpayOrderId: orderId }));
+
       const isMentorshipEnrollment = orderDetails?.notes?.type === "mentorship_enrollment" ||
                                      (await MentorshipEnrollment.findOne({ razorpayOrderId: orderId }));
+
+      // Handle PDF Purchase
+      if (isPDFPurchase) {
+        console.log("📄 Processing PDF purchase payment");
+
+        // Find or create purchase
+        let purchase = await PDFPurchase.findOne({ razorpayOrderId: orderId });
+        let isNewPurchase = false;
+
+        if (purchase) {
+          // Prevent duplicate processing
+          if (purchase.status === "confirmed") {
+            console.log("ℹ️ Purchase already confirmed:", purchase._id);
+            return res.json({ status: "ok" });
+          }
+
+          // Update existing purchase
+          purchase.status = "confirmed";
+          purchase.razorpayPaymentId = paymentId;
+          await purchase.save();
+        } else {
+          // Create new purchase from order notes (payment was successful)
+          if (!orderDetails || !orderDetails.notes) {
+            console.error("❌ Cannot create purchase: order details or notes missing");
+            return res.status(400).json({ error: "Order details missing" });
+          }
+
+          const userFirebaseUid = orderDetails.notes.userFirebaseUid;
+          const userName = orderDetails.notes.userName;
+          const userEmail = orderDetails.notes.userEmail;
+
+          if (!userFirebaseUid || !userEmail) {
+            console.error("❌ Cannot create purchase: missing user info in order notes");
+            return res.status(400).json({ error: "User information missing" });
+          }
+          
+          // Create purchase record (only after successful payment)
+          purchase = new PDFPurchase({
+            userFirebaseUid: userFirebaseUid,
+            userName: userName,
+            userEmail: userEmail,
+            amount: 99, // PDF price
+            razorpayOrderId: orderId,
+            razorpayPaymentId: paymentId,
+            status: "confirmed", // Directly confirmed since payment is successful
+          });
+
+          await purchase.save();
+          isNewPurchase = true;
+          console.log("✅ Created new PDF purchase after successful payment:", purchase._id);
+        }
+
+        console.log("📧 Sending PDF to user email...");
+
+        // Get admin details (first admin user)
+        const admin = await User.findOne({ role: "admin" });
+
+        // ✅ SEND EMAILS WITH PDF ATTACHMENT
+        const emailPromises = [];
+
+        // Email to User with PDF attachment
+        if (purchase.userEmail) {
+          const pdfPath = path.join(__dirname, "..", "elite_academy_magazine.pdf");
+          
+          emailPromises.push(
+            sendEmailWithPDF({
+              to: purchase.userEmail,
+              subject: "Elite Academy Magazine - Your PDF Download",
+              html: `
+                <h2>Thank you for your purchase! 🎉</h2>
+                <p>Dear ${purchase.userName},</p>
+                <p>Your purchase of the Elite Academy Magazine has been confirmed.</p>
+                <p><strong>Product:</strong> Elite Academy Magazine</p>
+                <p><strong>Description:</strong> PSSSB Exam Preparation Guide</p>
+                <ul>
+                  <li>Sports - 10 pages</li>
+                  <li>Index - 10 pages</li>
+                  <li>Days & Themes - 10 pages</li>
+                  <li>Military Exercises - 10 pages</li>
+                  <li>Appointments - 10 pages</li>
+                  <li>Awards & Honours - 10 pages</li>
+                </ul>
+                <p><strong>Amount Paid:</strong> ₹${purchase.amount}</p>
+                <p><strong>Payment ID:</strong> ${paymentId}</p>
+                <p><strong>Purchase Date:</strong> ${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', {
+                  timeZone: 'Asia/Kolkata',
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</p>
+                <p>Please find the PDF attached to this email.</p>
+                <p>Best regards,<br>Elite Meet Team</p>
+              `,
+              pdfPath: pdfPath,
+              pdfName: "elite_academy_magazine.pdf",
+            })
+          );
+        }
+
+        // Email to Admin
+        if (admin && admin.email) {
+          emailPromises.push(
+            sendEmail({
+              to: admin.email,
+              subject: "New PDF Purchase - Elite Academy Magazine",
+              html: `
+                <h2>New PDF Purchase! 📄</h2>
+                <p>You have a new purchase of the Elite Academy Magazine.</p>
+                <p><strong>Customer Name:</strong> ${purchase.userName}</p>
+                <p><strong>Customer Email:</strong> ${purchase.userEmail}</p>
+                <p><strong>Amount:</strong> ₹${purchase.amount}</p>
+                <p><strong>Payment ID:</strong> ${paymentId}</p>
+                <p><strong>Purchase Date:</strong> ${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', {
+                  timeZone: 'Asia/Kolkata',
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</p>
+                <p>Best regards,<br>Elite Meet Team</p>
+              `,
+            })
+          );
+        }
+
+        // Send emails (non-blocking, catch errors)
+        const results = await Promise.allSettled(emailPromises);
+        
+        results.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            console.log(`✅ Email ${index + 1} sent successfully`);
+          } else {
+            console.error(`❌ Email ${index + 1} failed:`, result.reason);
+          }
+        });
+
+        console.log("✅ PDF purchase webhook processed successfully:", purchase._id);
+        return res.json({ status: "ok" });
+      }
 
       if (isMentorshipEnrollment) {
         // Handle mentorship enrollment
@@ -367,6 +512,19 @@ const handleRazorpayWebhook = async (req, res) => {
       const orderId = paymentEntity.order_id;
 
       console.log("⚠️ Handling payment.failed for order:", orderId);
+
+      // Check if it's a PDF purchase
+      const purchase = await PDFPurchase.findOne({ razorpayOrderId: orderId });
+
+      if (purchase) {
+        // Handle PDF purchase failure
+        if (purchase.status === "pending") {
+          purchase.status = "cancelled";
+          await purchase.save();
+          console.log("✅ Cancelled PDF purchase after payment failure:", purchase._id);
+        }
+        return res.json({ status: "ok" });
+      }
 
       // Check if it's a mentorship enrollment
       const enrollment = await MentorshipEnrollment.findOne({ razorpayOrderId: orderId });

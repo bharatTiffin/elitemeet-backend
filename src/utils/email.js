@@ -1,5 +1,7 @@
 // src/utils/email.js
 const nodemailer = require("nodemailer");
+const path = require("path");
+const fs = require("fs");
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,      // e.g. smtp.gmail.com or your provider
@@ -64,7 +66,35 @@ const sendBookingEmails = async ({ user, admin, slot, meetLink }) => {
   });
 };
 
+/**
+ * Sends email with PDF attachment
+ */
+const sendEmailWithPDF = async ({ to, subject, text, html, pdfPath, pdfName }) => {
+  // Check if PDF file exists
+  if (!fs.existsSync(pdfPath)) {
+    console.error(`❌ PDF file not found at path: ${pdfPath}`);
+    throw new Error(`PDF file not found: ${pdfPath}`);
+  }
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM || `"Elite Meet" <no-reply@elitemeet.com>`,
+    to,
+    subject,
+    text,
+    html,
+    attachments: [
+      {
+        filename: pdfName || "elite_academy_magazine.pdf",
+        path: pdfPath,
+      },
+    ],
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
 module.exports = {
   sendEmail,
   sendBookingEmails,
+  sendEmailWithPDF,
 };
