@@ -11,6 +11,7 @@ connectDB();
 // CORS configuration
 app.use(cors({
   origin: [
+    '*',
     'https://www.eliteacademy.pro',
     'https://eliteacademy.pro',
     'http://localhost:5173', 
@@ -47,6 +48,7 @@ app.use("/api/payments", require("./src/routes/paymentRoutes"));
 app.use("/api/mentorship", require("./src/routes/mentorshipRoutes"));
 app.use("/api/pdf", require("./src/routes/pdfRoutes"));
 app.use("/api/cron", require("./src/routes/cronRoutes"));
+app.use("/api/typing", require("./src/routes/typingRoutes"));
 
 // Error handling
 app.use((err, req, res, next) => {

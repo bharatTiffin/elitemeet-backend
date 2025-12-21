@@ -8,6 +8,7 @@ const MentorshipEnrollment = require("../models/MentorshipEnrollment");
 const MentorshipProgram = require("../models/MentorshipProgram");
 const PDFPurchase = require("../models/PDFPurchase");
 const { sendEmail, sendEmailWithPDF } = require("../utils/email");
+const TypingPurchase = require("../models/TypingPurchase");
 
 const handleRazorpayWebhook = async (req, res) => {
   try {
@@ -85,6 +86,239 @@ const handleRazorpayWebhook = async (req, res) => {
 
       const isMentorshipEnrollment = orderDetails?.notes?.type === "mentorship_enrollment" ||
                                      (await MentorshipEnrollment.findOne({ razorpayOrderId: orderId }));
+
+        
+    const isTypingPurchase =
+    orderDetails?.notes?.type === "typing_purchase" ||
+    (await TypingPurchase.findOne({ razorpayOrderId: orderId }));
+        
+    // Handle Typing Purchase
+    if (isTypingPurchase) {
+    console.log("⌨️ Processing Typing course purchase payment");
+    
+    // Find purchase
+    let purchase = await TypingPurchase.findOne({ razorpayOrderId: orderId });
+    
+    if (purchase) {
+      // Prevent duplicate processing
+      if (purchase.status === "confirmed") {
+        console.log("ℹ️ Typing purchase already confirmed:", purchase._id);
+        return res.json({ status: "ok" });
+      }
+    
+      // Update existing purchase
+      purchase.status = "confirmed";
+      purchase.razorpayPaymentId = paymentId;
+      await purchase.save();
+    } else {
+      // Create new purchase from order notes
+      if (!orderDetails || !orderDetails.notes) {
+        console.error("❌ Cannot create typing purchase: order details missing");
+        return res.status(400).json({ error: "Order details missing" });
+      }
+    
+      const userFirebaseUid = orderDetails.notes.userFirebaseUid;
+      const userName = orderDetails.notes.userName;
+      const userEmail = orderDetails.notes.userEmail;
+    
+      if (!userFirebaseUid || !userEmail) {
+        console.error("❌ Cannot create typing purchase: missing user info");
+        return res.status(400).json({ error: "User information missing" });
+      }
+
+      // Get typing price from environment
+      const getTypingPrice = () => {
+        const price = process.env.TYPING_PRICE;
+        if (price) {
+          const parsedPrice = parseInt(price, 10);
+          if (!isNaN(parsedPrice) && parsedPrice > 0) {
+            return parsedPrice;
+          }
+        }
+        return 499; // Default price
+      };
+    
+      purchase = new TypingPurchase({
+        userFirebaseUid: userFirebaseUid,
+        userName: userName,
+        userEmail: userEmail,
+        amount: getTypingPrice(),
+        razorpayOrderId: orderId,
+        razorpayPaymentId: paymentId,
+        status: "confirmed",
+      });
+    
+      await purchase.save();
+      console.log("✅ Created typing purchase after payment:", purchase._id);
+    }
+
+    console.log("📧 Sending typing course access email...");
+
+    // Get admin details
+    const admin = await User.findOne({ role: "admin" });
+
+    // ✅ SEND EMAILS
+    const emailPromises = [];
+
+    // Email to User with access details
+    if (purchase.userEmail) {
+      emailPromises.push(
+        sendEmail({
+          to: purchase.userEmail,
+          subject: "Elite Academy - Punjabi Typing Course Access 🎉",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 28px;">⌨️ Welcome to Elite Academy</h1>
+                <p style="color: #e0e7ff; margin-top: 10px; font-size: 16px;">Punjabi & English Typing Training</p>
+              </div>
+              
+              <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <p style="color: #1f2937; font-size: 16px; line-height: 1.6;">Dear <strong>${purchase.userName}</strong>,</p>
+                
+                <p style="color: #1f2937; font-size: 16px; line-height: 1.6;">🎉 Congratulations! Your enrollment in the <strong>Punjabi & English Typing Training</strong> course has been confirmed.</p>
+                
+                <div style="background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%); padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #3b82f6;">
+                  <h3 style="margin-top: 0; color: #1e40af; font-size: 18px;">📋 Purchase Details:</h3>
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                      <td style="padding: 8px 0; color: #4b5563;"><strong>Course:</strong></td>
+                      <td style="padding: 8px 0; color: #1f2937; text-align: right;">Punjabi & English Typing Training</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px 0; color: #4b5563;"><strong>Level:</strong></td>
+                      <td style="padding: 8px 0; color: #1f2937; text-align: right;">Clerk / Senior Assistant</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px 0; color: #4b5563;"><strong>Amount Paid:</strong></td>
+                      <td style="padding: 8px 0; color: #059669; text-align: right; font-weight: bold;">₹${purchase.amount}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px 0; color: #4b5563;"><strong>Payment ID:</strong></td>
+                      <td style="padding: 8px 0; color: #1f2937; text-align: right; font-size: 12px;">${paymentId}</td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 8px 0; color: #4b5563;"><strong>Purchase Date:</strong></td>
+                      <td style="padding: 8px 0; color: #1f2937; text-align: right;">${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', {
+                        timeZone: 'Asia/Kolkata',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric'
+                      })}</td>
+                    </tr>
+                  </table>
+                </div>
+  
+                <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); padding: 20px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 25px 0;">
+                  <h3 style="margin-top: 0; color: #92400e; font-size: 18px;">🚀 How to Access Your Course:</h3>
+                  <ol style="color: #78350f; line-height: 2; margin: 15px 0; padding-left: 20px;">
+                    <li>Visit the typing platform: <a href="https://elite-academy-punjabi-typing.vercel.app" style="color: #3b82f6; text-decoration: none; font-weight: bold;">elite-academy-punjabi-typing.vercel.app</a></li>
+                    <li>Click on <strong>"Sign in with Google"</strong></li>
+                    <li><strong>Important:</strong> Use the same Gmail: <span style="background-color: #fbbf24; padding: 2px 8px; border-radius: 4px; font-weight: bold;">${purchase.userEmail}</span></li>
+                    <li>Start your typing practice immediately!</li>
+                  </ol>
+                </div>
+  
+                <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                  <h3 style="margin-top: 0; color: #1f2937; font-size: 18px;">✨ What You'll Learn:</h3>
+                  <ul style="color: #4b5563; line-height: 2; margin: 10px 0; padding-left: 20px;">
+                    <li>✅ Same exam pattern • Same difficulty level • Real test practice</li>
+                    <li>✅ Step-by-step Punjabi typing learning (from zero)</li>
+                    <li>✅ Speed + accuracy focused training</li>
+                    <li>✅ Exam-oriented practice & mock tests</li>
+                  </ul>
+                </div>
+  
+                <div style="background-color: #dbeafe; padding: 15px; border-radius: 8px; margin: 25px 0; text-align: center;">
+                  <p style="color: #1e40af; margin: 0; font-size: 14px;">
+                    <strong>🔐 Security Note:</strong> Only login with <strong>${purchase.userEmail}</strong> to access your course.
+                  </p>
+                </div>
+  
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="https://elite-academy-punjabi-typing.vercel.app" 
+                     style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                            color: white; text-decoration: none; padding: 15px 40px; border-radius: 8px; 
+                            font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    🎯 Access Typing Platform Now
+                  </a>
+                </div>
+  
+                <p style="color: #1f2937; font-size: 16px; line-height: 1.8; margin-top: 30px;">
+                  Clear your typing exam, secure your dream government job. Your success starts here! 💪
+                </p>
+  
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+                
+                <p style="color: #6b7280; font-size: 14px; line-height: 1.6;">
+                  Need help? Contact us at <a href="mailto:2025eliteacademy@gmail.com" style="color: #3b82f6; text-decoration: none;">2025eliteacademy@gmail.com</a>
+                </p>
+                
+                <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-top: 20px;">
+                  Best regards,<br>
+                  <strong style="color: #1f2937;">Elite Academy Team</strong><br>
+                  <a href="https://eliteacademy.pro" style="color: #3b82f6; text-decoration: none;">www.eliteacademy.pro</a>
+                </p>
+              </div>
+            </div>
+          `,
+        })
+      );
+    }
+  
+    // Email to Admin
+    if (admin && admin.email) {
+      emailPromises.push(
+        sendEmail({
+          to: admin.email,
+          subject: "New Typing Course Purchase ⌨️",
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #3b82f6;">New Typing Course Purchase ⌨️</h2>
+              
+              <p>You have a new purchase of the Punjabi & English Typing Training course.</p>
+              
+              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p><strong>Customer Name:</strong> ${purchase.userName}</p>
+                <p><strong>Customer Email:</strong> ${purchase.userEmail}</p>
+                <p><strong>Amount:</strong> ₹${purchase.amount}</p>
+                <p><strong>Payment ID:</strong> ${paymentId}</p>
+                <p><strong>Purchase Date:</strong> ${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', {
+                  timeZone: 'Asia/Kolkata',
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</p>
+              </div>
+  
+              <p style="color: #6b7280;">
+                The customer will receive access to the typing platform at:<br>
+                <a href="https://elite-academy-punjabi-typing.vercel.app" style="color: #3b82f6;">
+                  elite-academy-punjabi-typing.vercel.app
+                </a>
+              </p>
+              
+              <p style="color: #6b7280; margin-top: 30px;">
+                Best regards,<br>
+                <strong>Elite Meet System</strong>
+              </p>
+            </div>
+          `,
+        })
+      );
+    }
+  
+    try {
+      await Promise.all(emailPromises);
+      console.log("✅ Typing course emails sent successfully");
+    } catch (emailError) {
+      console.error("❌ Error sending typing course emails:", emailError);
+    }
+  
+    return res.json({ status: "ok" });
+    }
+
 
       // Handle PDF Purchase
       if (isPDFPurchase) {
