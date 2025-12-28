@@ -177,73 +177,74 @@ if (purchase.userEmail) {
     sendEmail({
       to: purchase.userEmail,
       subject: "📘 Elite Academy - Complete Polity Package",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 20px;">
-          
-          <!-- Header -->
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">📘 Complete Polity Package</h1>
-            <p style="color: #e0e7ff; margin-top: 10px; font-size: 16px;">Thank you for your purchase!</p>
-          </div>
+   html: `
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 20px;">
+    
+    <!-- Header -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+      <h1 style="color: white; margin: 0; font-size: 28px;">📘 Complete Polity Package</h1>
+      <p style="color: #e0e7ff; margin-top: 10px; font-size: 16px;">PSSSB & Punjab Exams</p>
+    </div>
 
-          <!-- Main Content -->
-          <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            
-            <p style="color: #1f2937; font-size: 16px; line-height: 1.6;">Dear <strong>${purchase.userName}</strong>,</p>
-            
-            <p style="color: #1f2937; font-size: 16px; line-height: 1.6;">
-              ✅ Your purchase has been confirmed! You can now access your <strong>Complete Polity Package PDF</strong>.
-            </p>
+    <!-- Main Content -->
+    <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      
+      <p style="color: #1f2937; font-size: 16px; line-height: 1.6;">Dear <strong>${purchase.userName}</strong>,</p>
+      
+      <p style="color: #059669; font-size: 18px; font-weight: bold; margin: 20px 0;">
+        ✅ Payment Confirmed! Download your PDF now.
+      </p>
 
-            <!-- Download Button Section -->
-            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 25px; border-radius: 10px; margin: 25px 0; text-align: center;">
-              <h2 style="margin: 0 0 15px 0; color: white; font-size: 22px;">📥 Download Your PDF</h2>
-              
-              <a href="${polityPdfLink}" 
-                 style="display: inline-block; background: white; color: #059669; text-decoration: none; padding: 16px 50px; border-radius: 8px; font-weight: bold; font-size: 18px; margin: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                Click Here to Download
-              </a>
-              
-              <p style="color: #d1fae5; margin: 15px 0 5px 0; font-size: 14px;">
-                <strong>If the button doesn't work, copy this link:</strong><br>
-                <a href="${polityPdfLink}" style="color: white; word-break: break-all; text-decoration: underline;">${polityPdfLink}</a>
-              </p>
-            </div>
+      <!-- What's Inside - Numbered List -->
+      <div style="background: #f0f9ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+        <h3 style="color: #1e40af; margin-top: 0; font-size: 18px;">🎯 What's Inside:</h3>
+        <p style="color: #1f2937; margin: 8px 0; font-size: 15px;"><strong>1.</strong> 90 Pages Full Polity Notes</p>
+        <p style="color: #1f2937; margin: 8px 0; font-size: 15px;"><strong>2.</strong> 20 Pages PYQs (2012–2025 | Dec Updated)</p>
+        <p style="color: #1f2937; margin: 8px 0; font-size: 15px;"><strong>3.</strong> 100% PSSSB + Punjab Exam Oriented</p>
+        <p style="color: #059669; margin: 15px 0 0 0; font-size: 16px; font-weight: bold;">🔥 Score Full Marks – No Extra Books Needed</p>
+      </div>
 
-            <!-- Purchase Details -->
-            <div style="background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%); padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #3b82f6;">
-              <h3 style="margin-top: 0; color: #1e40af; font-size: 18px;">📋 Purchase Details</h3>
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr>
-                  <td style="padding: 8px 0; color: #4b5563;"><strong>Product</strong></td>
-                  <td style="padding: 8px 0; color: #1f2937; text-align: right;">Complete Polity Package</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #4b5563;"><strong>Description</strong></td>
-                  <td style="padding: 8px 0; color: #1f2937; text-align: right;">PSSSB & Punjab Exams - 110 Pages</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #4b5563;"><strong>Amount Paid</strong></td>
-                  <td style="padding: 8px 0; color: #059669; text-align: right; font-weight: bold;">₹${purchase.amount}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #4b5563;"><strong>Payment ID</strong></td>
-                  <td style="padding: 8px 0; color: #1f2937; text-align: right; font-size: 12px;">${paymentId}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 8px 0; color: #4b5563;"><strong>Purchase Date</strong></td>
-                  <td style="padding: 8px 0; color: #1f2937; text-align: right;">${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'long', year: 'numeric' })}</td>
-                </tr>
-              </table>
-            </div>
+      <!-- Download Button Section -->
+      <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 25px; border-radius: 10px; margin: 25px 0; text-align: center;">
+        <h2 style="margin: 0 0 15px 0; color: white; font-size: 22px;">📥 Download Your PDF</h2>
+        
+        <a href="${polityPdfLink}" 
+           style="display: inline-block; background: white; color: #059669; text-decoration: none; padding: 16px 50px; border-radius: 8px; font-weight: bold; font-size: 18px; margin: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+          Click Here to Download
+        </a>
+        
+        <p style="color: #d1fae5; margin: 15px 0 5px 0; font-size: 13px;">
+          If button doesn't work, copy this link:<br>
+          <a href="${polityPdfLink}" style="color: white; word-break: break-all; text-decoration: underline; font-size: 12px;">${polityPdfLink}</a>
+        </p>
+      </div>
 
-            <p style="color: #6b7280; margin-top: 30px;">
-              Best regards,<br>
-              <strong>Elite Academy Team</strong>
-            </p>
-          </div>
-        </div>
-      `
+      <!-- Purchase Details -->
+      <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Amount Paid</td>
+            <td style="padding: 6px 0; color: #059669; text-align: right; font-weight: bold; font-size: 16px;">₹${purchase.amount}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Payment ID</td>
+            <td style="padding: 6px 0; color: #1f2937; text-align: right; font-size: 13px;">${paymentId}</td>
+          </tr>
+          <tr>
+            <td style="padding: 6px 0; color: #6b7280; font-size: 14px;">Date</td>
+            <td style="padding: 6px 0; color: #1f2937; text-align: right; font-size: 13px;">${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric' })}</td>
+          </tr>
+        </table>
+      </div>
+
+      <p style="color: #6b7280; margin-top: 25px; font-size: 14px;">
+        Best regards,<br>
+        <strong style="color: #1f2937;">Elite Academy Team</strong>
+      </p>
+    </div>
+  </div>
+`
+
     })
   );
 }
