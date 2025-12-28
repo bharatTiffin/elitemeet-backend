@@ -9,6 +9,7 @@ const MentorshipProgram = require("../models/MentorshipProgram");
 const PDFPurchase = require("../models/PDFPurchase");
 const { sendEmail, sendEmailWithPDF } = require("../utils/email");
 const TypingPurchase = require("../models/TypingPurchase");
+const PolityPurchase = require("../models/PolityPurchase");
 
 const handleRazorpayWebhook = async (req, res) => {
   try {
@@ -91,6 +92,176 @@ const handleRazorpayWebhook = async (req, res) => {
     const isTypingPurchase =
     orderDetails?.notes?.type === "typing_purchase" ||
     (await TypingPurchase.findOne({ razorpayOrderId: orderId }));
+
+
+
+    const isPolityPurchase =
+  orderDetails?.notes?.type === "polity_purchase" ||
+  (await PolityPurchase.findOne({ razorpayOrderId: orderId }));
+
+// Add this handler after the PDF purchase handler
+// Handle Polity Purchase
+if (isPolityPurchase) {
+  console.log("📘 Processing Polity Book purchase payment");
+
+  // Find purchase
+  let purchase = await PolityPurchase.findOne({ razorpayOrderId: orderId });
+
+  if (purchase) {
+    // Prevent duplicate processing
+    if (purchase.status === "confirmed") {
+      console.log("ℹ️ Polity purchase already confirmed:", purchase._id);
+      return res.json({ status: "ok" });
+    }
+
+    // Update existing purchase
+    purchase.status = "confirmed";
+    purchase.razorpayPaymentId = paymentId;
+    await purchase.save();
+  } else {
+    // Create new purchase from order notes
+    if (!orderDetails || !orderDetails.notes) {
+      console.error("❌ Cannot create polity purchase: order details missing");
+      return res.status(400).json({ error: "Order details missing" });
+    }
+
+    const userFirebaseUid = orderDetails.notes.userFirebaseUid;
+    const userName = orderDetails.notes.userName;
+    const userEmail = orderDetails.notes.userEmail;
+
+    if (!userFirebaseUid || !userEmail) {
+      console.error("❌ Cannot create polity purchase: missing user info");
+      return res.status(400).json({ error: "User information missing" });
+    }
+
+    // Get polity price from environment
+    const getPolityPrice = () => {
+      const price = process.env.POLITY_PRICE;
+      if (price) {
+        const parsedPrice = parseInt(price, 10);
+        if (!isNaN(parsedPrice) && parsedPrice > 0) {
+          return parsedPrice;
+        }
+      }
+      return 199; // Default price
+    };
+
+    purchase = new PolityPurchase({
+      userFirebaseUid: userFirebaseUid,
+      userName: userName,
+      userEmail: userEmail,
+      amount: getPolityPrice(),
+      razorpayOrderId: orderId,
+      razorpayPaymentId: paymentId,
+      status: "confirmed",
+    });
+
+    await purchase.save();
+    console.log("✅ Created polity purchase after payment:", purchase._id);
+  }
+
+  console.log("📧 Sending Polity Book PDF email...");
+
+  // Get admin details
+  const admin = await User.findOne({ role: "admin" });
+
+  // ✅ SEND EMAILS
+  const emailPromises = [];
+
+  // Path to the Polity PDF (make sure you upload it to your server)
+  const polityPdfPath = path.join(__dirname, "../../elite_academy_polity.pdf");
+
+  // Email to User with Polity PDF attached
+  if (purchase.userEmail) {
+    emailPromises.push(
+      sendEmailWithPDF({
+        to: purchase.userEmail,
+        subject: "Elite Academy - Complete Polity Package 📘",
+        html: `
+          <h2>📘 Complete Polity Package</h2>
+          <p>Dear ${purchase.userName},</p>
+          <p>Your purchase of the <strong>Complete Polity Package</strong> has been confirmed.</p>
+          
+          <h3>Purchase Details:</h3>
+          <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 8px;"><strong>Product</strong></td>
+              <td style="border: 1px solid #ddd; padding: 8px;">Complete Polity Package</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 8px;"><strong>Description</strong></td>
+              <td style="border: 1px solid #ddd; padding: 8px;">PSSSB & Punjab Exams - 110 Pages</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 8px;"><strong>Amount Paid</strong></td>
+              <td style="border: 1px solid #ddd; padding: 8px;">₹${purchase.amount}</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 8px;"><strong>Payment ID</strong></td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${paymentId}</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 8px;"><strong>Purchase Date</strong></td>
+              <td style="border: 1px solid #ddd; padding: 8px;">${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}</td>
+            </tr>
+          </table>
+          
+          <p><strong>📎 Please find the Polity Book PDF attached to this email.</strong></p>
+          
+          <h3>What's Included:</h3>
+          <ul>
+            <li>🔥 90 Pages Full Polity Notes</li>
+            <li>🔥 20 Pages PYQs (2012–2025 | Dec Updated)</li>
+            <li>🔥 100% PSSSB + Punjab Exam Oriented</li>
+          </ul>
+          
+          <p>Best regards,<br><strong>Elite Academy Team</strong></p>
+        `,
+        attachmentPath: polityPdfPath,
+        attachmentName: "Elite_Academy_Complete_Polity_Package.pdf",
+      })
+    );
+  }
+
+  // Email to Admin
+  if (admin && admin.email) {
+    emailPromises.push(
+      sendEmail({
+        to: admin.email,
+        subject: "New Polity Book Purchase - Elite Academy",
+        html: `
+          <h2>📘 New Polity Book Purchase</h2>
+          <p>You have a new purchase of the Complete Polity Package.</p>
+          
+          <p><strong>Customer Name:</strong> ${purchase.userName}</p>
+          <p><strong>Customer Email:</strong> ${purchase.userEmail}</p>
+          <p><strong>Amount:</strong> ₹${purchase.amount}</p>
+          <p><strong>Payment ID:</strong> ${paymentId}</p>
+          <p><strong>Purchase Date:</strong> ${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', {
+            timeZone: 'Asia/Kolkata',
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })}</p>
+          
+          <p>Best regards,<br><strong>Elite Meet System</strong></p>
+        `,
+      })
+    );
+  }
+
+  await Promise.all(emailPromises);
+
+  console.log("✅ Polity purchase processed successfully");
+  return res.json({ status: "ok" });
+}
         
     // Handle Typing Purchase
     if (isTypingPurchase) {
