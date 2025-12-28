@@ -173,90 +173,53 @@ if (isPolityPurchase) {
 
 
   // Email to User with Polity PDF attached
-  if (purchase.userEmail) {
-    emailPromises.push(
-      sendEmailWithPDF({
-        to: purchase.userEmail,
-        subject: "Elite Academy - Complete Polity Package 📘",
-        html: `
-          <h2>📘 Complete Polity Package</h2>
+  // Email to User with Polity PDF attached
+if (purchase.userEmail) {
+  emailPromises.push(
+    sendEmailWithPDF({
+      to: purchase.userEmail,
+      subject: "Elite Academy - Complete Polity Package 📘",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+          <h2 style="color: #4CAF50; text-align: center;">🎉 Thank You for Your Purchase!</h2>
           <p>Dear ${purchase.userName},</p>
           <p>Your purchase of the <strong>Complete Polity Package</strong> has been confirmed.</p>
-          
-          <h3>Purchase Details:</h3>
-          <table style="border-collapse: collapse; width: 100%; max-width: 500px;">
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;"><strong>Product</strong></td>
-              <td style="border: 1px solid #ddd; padding: 8px;">Complete Polity Package</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;"><strong>Description</strong></td>
-              <td style="border: 1px solid #ddd; padding: 8px;">PSSSB & Punjab Exams - 110 Pages</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;"><strong>Amount Paid</strong></td>
-              <td style="border: 1px solid #ddd; padding: 8px;">₹${purchase.amount}</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;"><strong>Payment ID</strong></td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${paymentId}</td>
-            </tr>
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;"><strong>Purchase Date</strong></td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', {
-                timeZone: 'Asia/Kolkata',
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}</td>
-            </tr>
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Product</strong></td><td style="padding: 8px; border: 1px solid #ddd;">Complete Polity Package</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Description</strong></td><td style="padding: 8px; border: 1px solid #ddd;">PSSSB & Punjab Exams - 110 Pages</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Amount Paid</strong></td><td style="padding: 8px; border: 1px solid #ddd;">₹${purchase.amount}</td></tr>
+            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Payment ID</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${paymentId}</td></tr>
           </table>
-          
-          <p><strong>📎 Please find the Polity Book PDF attached to this email.</strong></p>
-          
-          <h3>What's Included:</h3>
-          <ul>
-            <li>🔥 90 Pages Full Polity Notes</li>
-            <li>🔥 20 Pages PYQs (2012–2025 | Dec Updated)</li>
-            <li>🔥 100% PSSSB + Punjab Exam Oriented</li>
-          </ul>
-          
+          <p>📎 <strong>Please find the Polity Book PDF attached to this email.</strong></p>
           <p>Best regards,<br><strong>Elite Academy Team</strong></p>
-        `,
-        attachmentPath: polityPdfPath,
-        attachmentName: "Elite_Academy_Complete_Polity_Package.pdf",
-      })
-    );
-  }
+        </div>
+      `,
+      pdfPath: polityPdfPath,  // ✅ CHANGE THIS - was probably just 'pdfPath'
+      pdfFilename: "Elite_Academy_Polity_Package.pdf"
+    })
+  );
+}
 
-  // Email to Admin
-  if (admin && admin.email) {
-    emailPromises.push(
-      sendEmail({
-        to: admin.email,
-        subject: "New Polity Book Purchase - Elite Academy",
-        html: `
-          <h2>📘 New Polity Book Purchase</h2>
+// Email to Admin notification
+if (admin && admin.email) {
+  emailPromises.push(
+    sendEmail({
+      to: admin.email,
+      subject: "🎉 New Polity Package Purchase",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
+          <h2 style="color: #2196F3;">New Purchase Notification</h2>
           <p>You have a new purchase of the Complete Polity Package.</p>
-          
           <p><strong>Customer Name:</strong> ${purchase.userName}</p>
           <p><strong>Customer Email:</strong> ${purchase.userEmail}</p>
           <p><strong>Amount:</strong> ₹${purchase.amount}</p>
           <p><strong>Payment ID:</strong> ${paymentId}</p>
-          <p><strong>Purchase Date:</strong> ${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', {
-            timeZone: 'Asia/Kolkata',
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })}</p>
-          
-          <p>Best regards,<br><strong>Elite Meet System</strong></p>
-        `,
-      })
-    );
-  }
+        </div>
+      `
+    })
+  );
+}
+
 
   await Promise.all(emailPromises);
 
