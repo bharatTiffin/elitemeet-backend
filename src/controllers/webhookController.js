@@ -162,40 +162,88 @@ if (isPolityPurchase) {
 
   console.log("📧 Sending Polity Book PDF email...");
 
-  // Get admin details
-  const admin = await User.findOne({ role: "admin" });
+// Get admin details
+const admin = await User.findOne({ role: "admin" });
 
-  // ✅ SEND EMAILS
-  const emailPromises = [];
+// ✅ SEND EMAILS
+const emailPromises = [];
 
-  // Path to the Polity PDF (make sure you upload it to your server)
-  const polityPdfPath = path.join(__dirname, "..", "elite_academy_polity.pdf");
+// Get Google Drive link from environment variable
+const polityPdfLink = process.env.POLITY_PDF_GOOGLE_DRIVE_LINK || "https://drive.google.com/file/d/1M3781NiqdVZMfTB6PmiRXmC0L1zxdTSP/view?usp=sharing";
 
-
-  // Email to User with Polity PDF attached
-  // Email to User with Polity PDF attached
+// Email to User with Google Drive download link (NO PDF attachment)
 if (purchase.userEmail) {
   emailPromises.push(
-    sendEmailWithPDF({
+    sendEmail({
       to: purchase.userEmail,
-      subject: "Elite Academy - Complete Polity Package 📘",
+      subject: "📘 Elite Academy - Complete Polity Package",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-          <h2 style="color: #4CAF50; text-align: center;">🎉 Thank You for Your Purchase!</h2>
-          <p>Dear ${purchase.userName},</p>
-          <p>Your purchase of the <strong>Complete Polity Package</strong> has been confirmed.</p>
-          <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Product</strong></td><td style="padding: 8px; border: 1px solid #ddd;">Complete Polity Package</td></tr>
-            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Description</strong></td><td style="padding: 8px; border: 1px solid #ddd;">PSSSB & Punjab Exams - 110 Pages</td></tr>
-            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Amount Paid</strong></td><td style="padding: 8px; border: 1px solid #ddd;">₹${purchase.amount}</td></tr>
-            <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Payment ID</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${paymentId}</td></tr>
-          </table>
-          <p>📎 <strong>Please find the Polity Book PDF attached to this email.</strong></p>
-          <p>Best regards,<br><strong>Elite Academy Team</strong></p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 20px;">
+          
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">📘 Complete Polity Package</h1>
+            <p style="color: #e0e7ff; margin-top: 10px; font-size: 16px;">Thank you for your purchase!</p>
+          </div>
+
+          <!-- Main Content -->
+          <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            
+            <p style="color: #1f2937; font-size: 16px; line-height: 1.6;">Dear <strong>${purchase.userName}</strong>,</p>
+            
+            <p style="color: #1f2937; font-size: 16px; line-height: 1.6;">
+              ✅ Your purchase has been confirmed! You can now access your <strong>Complete Polity Package PDF</strong>.
+            </p>
+
+            <!-- Download Button Section -->
+            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 25px; border-radius: 10px; margin: 25px 0; text-align: center;">
+              <h2 style="margin: 0 0 15px 0; color: white; font-size: 22px;">📥 Download Your PDF</h2>
+              
+              <a href="${polityPdfLink}" 
+                 style="display: inline-block; background: white; color: #059669; text-decoration: none; padding: 16px 50px; border-radius: 8px; font-weight: bold; font-size: 18px; margin: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                Click Here to Download
+              </a>
+              
+              <p style="color: #d1fae5; margin: 15px 0 5px 0; font-size: 14px;">
+                <strong>If the button doesn't work, copy this link:</strong><br>
+                <a href="${polityPdfLink}" style="color: white; word-break: break-all; text-decoration: underline;">${polityPdfLink}</a>
+              </p>
+            </div>
+
+            <!-- Purchase Details -->
+            <div style="background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%); padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #3b82f6;">
+              <h3 style="margin-top: 0; color: #1e40af; font-size: 18px;">📋 Purchase Details</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; color: #4b5563;"><strong>Product</strong></td>
+                  <td style="padding: 8px 0; color: #1f2937; text-align: right;">Complete Polity Package</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #4b5563;"><strong>Description</strong></td>
+                  <td style="padding: 8px 0; color: #1f2937; text-align: right;">PSSSB & Punjab Exams - 110 Pages</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #4b5563;"><strong>Amount Paid</strong></td>
+                  <td style="padding: 8px 0; color: #059669; text-align: right; font-weight: bold;">₹${purchase.amount}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #4b5563;"><strong>Payment ID</strong></td>
+                  <td style="padding: 8px 0; color: #1f2937; text-align: right; font-size: 12px;">${paymentId}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; color: #4b5563;"><strong>Purchase Date</strong></td>
+                  <td style="padding: 8px 0; color: #1f2937; text-align: right;">${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'long', year: 'numeric' })}</td>
+                </tr>
+              </table>
+            </div>
+
+            <p style="color: #6b7280; margin-top: 30px;">
+              Best regards,<br>
+              <strong>Elite Academy Team</strong>
+            </p>
+          </div>
         </div>
-      `,
-      pdfPath: polityPdfPath,  // ✅ CHANGE THIS - was probably just 'pdfPath'
-      pdfFilename: "Elite_Academy_Polity_Package.pdf"
+      `
     })
   );
 }
@@ -207,24 +255,32 @@ if (admin && admin.email) {
       to: admin.email,
       subject: "🎉 New Polity Package Purchase",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
-          <h2 style="color: #2196F3;">New Purchase Notification</h2>
-          <p>You have a new purchase of the Complete Polity Package.</p>
-          <p><strong>Customer Name:</strong> ${purchase.userName}</p>
-          <p><strong>Customer Email:</strong> ${purchase.userEmail}</p>
-          <p><strong>Amount:</strong> ₹${purchase.amount}</p>
-          <p><strong>Payment ID:</strong> ${paymentId}</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #3b82f6;">New Purchase Notification</h2>
+          <p>You have a new purchase of the <strong>Complete Polity Package</strong>.</p>
+          
+          <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p><strong>Customer Name:</strong> ${purchase.userName}</p>
+            <p><strong>Customer Email:</strong> ${purchase.userEmail}</p>
+            <p><strong>Amount:</strong> ₹${purchase.amount}</p>
+            <p><strong>Payment ID:</strong> ${paymentId}</p>
+            <p><strong>Purchase Date:</strong> ${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          </div>
+
+          <p style="color: #6b7280; margin-top: 30px;">
+            Best regards,<br>
+            <strong>Elite Meet System</strong>
+          </p>
         </div>
       `
     })
   );
 }
 
+await Promise.all(emailPromises);
+console.log("✅ Polity purchase emails sent successfully");
 
-  await Promise.all(emailPromises);
-
-  console.log("✅ Polity purchase processed successfully");
-  return res.json({ status: "ok" });
+return res.json({ status: "ok" });
 }
         
     // Handle Typing Purchase
