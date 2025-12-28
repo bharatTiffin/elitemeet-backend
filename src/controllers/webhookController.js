@@ -169,7 +169,8 @@ if (isPolityPurchase) {
   const emailPromises = [];
 
   // Path to the Polity PDF (make sure you upload it to your server)
-  const polityPdfPath = path.join(__dirname, "../../elite_academy_polity.pdf");
+  const polityPdfPath = path.join(__dirname, "..", "elite_academy_polity.pdf");
+
 
   // Email to User with Polity PDF attached
   if (purchase.userEmail) {
