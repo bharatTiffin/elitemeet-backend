@@ -28,18 +28,59 @@ const getAvailableSlots = async (req, res, next) => {
  * GET /api/slots/all
  * Admin only - get all slots including booked ones
  */
+// const getAllSlots = async (req, res, next) => {
+//   try {
+//     console.log('getAllSlots');
+//     const { role, id } = req.user;
+//     if (role !== 'admin') {
+//       return res.status(403).json({ error: 'Admin access required' });
+//     }
+    
+//     // ✅ CORRECT - fetch all slots created by this admin
+//     const slots = await Slot.find({ adminFirebaseUid: id }).sort({ startTime: 1 });
+    
+//     res.json(slots);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
 const getAllSlots = async (req, res, next) => {
   try {
     console.log('getAllSlots');
     const { role, id } = req.user;
+    
     if (role !== 'admin') {
       return res.status(403).json({ error: 'Admin access required' });
     }
+
+    // Fetch all slots created by this admin
+    const slots = await Slot.find({ adminFirebaseUid: id })
+      .sort({ startTime: -1 }); // -1 for newest first
     
-    // ✅ CORRECT - fetch all slots created by this admin
-    const slots = await Slot.find({ adminFirebaseUid: id }).sort({ startTime: 1 });
+    // For booked slots, fetch booking details to get user info
+    const Booking = require('../models/Booking');
+    const slotsWithUserInfo = await Promise.all(
+      slots.map(async (slot) => {
+        const slotObj = slot.toObject();
+        
+        if (slot.status === 'booked') {
+          // Find the confirmed booking for this slot
+          const booking = await Booking.findOne({ 
+            slotId: slot._id, 
+            status: 'confirmed' 
+          }).select('userName userEmail');
+          
+          if (booking) {
+            slotObj.bookedByName = booking.userName;
+            slotObj.bookedByEmail = booking.userEmail;
+          }
+        }
+        
+        return slotObj;
+      })
+    );
     
-    res.json(slots);
+    res.json(slotsWithUserInfo);
   } catch (err) {
     next(err);
   }
