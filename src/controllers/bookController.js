@@ -397,19 +397,19 @@ exports.createPackagePurchase = async (req, res) => {
     }
 
     // Check if complete pack and user has any book
-    if (packageType === PackageType.COMPLETE_PACK) {
-      const anyPurchase = await BookPurchase.findOne({
-        userId,
-        status: 'completed'
-      });
+    // if (packageType === PackageType.COMPLETE_PACK) {
+    //   const anyPurchase = await BookPurchase.findOne({
+    //     userId,
+    //     status: 'completed'
+    //   });
 
-      if (anyPurchase) {
-        return res.status(400).json({
-          error: 'You have already purchased some books. Complete pack cannot be purchased.',
-          suggestion: 'Consider buying remaining books individually.'
-        });
-      }
-    }
+    //   if (anyPurchase) {
+    //     return res.status(400).json({
+    //       error: 'You have already purchased some books. Complete pack cannot be purchased.',
+    //       suggestion: 'Consider buying remaining books individually.'
+    //     });
+    //   }
+    // }
 
     // Check if without_polity pack and user has polity or complete pack
     if (packageType === PackageType.WITHOUT_POLITY) {
