@@ -13,7 +13,7 @@ const PolityPurchase = require("../models/PolityPurchase");
 const BookPurchase = require("../models/BookPurchase");
 const { PackageType } = require("../models/BookPurchase");
 const { sendBookEmail, sendPackageEmail } = require("../utils/email");
-
+const { BOOK_INFO, PACKAGE_INFO } = require('./bookController');
 
 // Get PDF links from ENV
 const getPDFLinks = () => ({

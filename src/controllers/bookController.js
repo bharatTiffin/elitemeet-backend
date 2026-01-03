@@ -551,3 +551,6 @@ exports.getAllBooks = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch books' });
   }
 };
+
+module.exports.BOOK_INFO = BOOK_INFO;
+module.exports.PACKAGE_INFO = PACKAGE_INFO;
