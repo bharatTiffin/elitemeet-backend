@@ -300,25 +300,25 @@ exports.createBookPurchase = async (req, res) => {
     }
 
     // Check if user already purchased this book
-    const existingPurchase = await BookPurchase.findOne({
-      userId,
-      $or: [
-        { bookType, packageType: PackageType.SINGLE },
-        { packageType: PackageType.COMPLETE_PACK },
-        { 
-          packageType: PackageType.WITHOUT_POLITY,
-          booksIncluded: bookType
-        }
-      ],
-      status: 'completed'
-    });
+    // const existingPurchase = await BookPurchase.findOne({
+    //   userId,
+    //   $or: [
+    //     { bookType, packageType: PackageType.SINGLE },
+    //     { packageType: PackageType.COMPLETE_PACK },
+    //     { 
+    //       packageType: PackageType.WITHOUT_POLITY,
+    //       booksIncluded: bookType
+    //     }
+    //   ],
+    //   status: 'completed'
+    // });
 
-    if (existingPurchase) {
-      return res.status(400).json({ 
-        error: 'You have already purchased this book',
-        alreadyPurchased: true
-      });
-    }
+    // if (existingPurchase) {
+    //   return res.status(400).json({ 
+    //     error: 'You have already purchased this book',
+    //     alreadyPurchased: true
+    //   });
+    // }
 
     // Create Razorpay order
     const amount = bookInfo.price * 100;
@@ -383,18 +383,18 @@ exports.createPackagePurchase = async (req, res) => {
     }
 
     // Check if user already purchased this package
-    const existingPackage = await BookPurchase.findOne({
-      userId,
-      packageType,
-      status: 'completed'
-    });
+    // const existingPackage = await BookPurchase.findOne({
+    //   userId,
+    //   packageType,
+    //   status: 'completed'
+    // });
 
-    if (existingPackage) {
-      return res.status(400).json({ 
-        error: 'You have already purchased this package',
-        alreadyPurchased: true
-      });
-    }
+    // if (existingPackage) {
+    //   return res.status(400).json({ 
+    //     error: 'You have already purchased this package',
+    //     alreadyPurchased: true
+    //   });
+    // }
 
     // Check if complete pack and user has any book
     // if (packageType === PackageType.COMPLETE_PACK) {
