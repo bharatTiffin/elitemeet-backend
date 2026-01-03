@@ -412,36 +412,36 @@ exports.createPackagePurchase = async (req, res) => {
     // }
 
     // Check if without_polity pack and user has polity or complete pack
-    if (packageType === PackageType.WITHOUT_POLITY) {
-      const hasPolityOrComplete = await BookPurchase.findOne({
-        userId,
-        $or: [
-          { bookType: BookType.POLITY, status: 'completed' },
-          { packageType: PackageType.COMPLETE_PACK, status: 'completed' }
-        ]
-      });
+    // if (packageType === PackageType.WITHOUT_POLITY) {
+    //   const hasPolityOrComplete = await BookPurchase.findOne({
+    //     userId,
+    //     $or: [
+    //       { bookType: BookType.POLITY, status: 'completed' },
+    //       { packageType: PackageType.COMPLETE_PACK, status: 'completed' }
+    //     ]
+    //   });
 
-      if (!hasPolityOrComplete) {
-        return res.status(400).json({
-          error: 'This package is for users who already have Polity book',
-          suggestion: 'Consider buying Complete Pack (All 8 Books) instead.'
-        });
-      }
+    //   if (!hasPolityOrComplete) {
+    //     return res.status(400).json({
+    //       error: 'This package is for users who already have Polity book',
+    //       suggestion: 'Consider buying Complete Pack (All 8 Books) instead.'
+    //     });
+    //   }
 
-      // Check if already has other books
-      const otherBooks = await BookPurchase.find({
-        userId,
-        bookType: { $in: packageInfo.books },
-        status: 'completed'
-      });
+    //   // Check if already has other books
+    //   const otherBooks = await BookPurchase.find({
+    //     userId,
+    //     bookType: { $in: packageInfo.books },
+    //     status: 'completed'
+    //   });
 
-      if (otherBooks.length > 0) {
-        return res.status(400).json({
-          error: `You already own: ${otherBooks.map(b => b.bookType).join(', ')}`,
-          suggestion: 'Buy remaining books individually.'
-        });
-      }
-    }
+    //   if (otherBooks.length > 0) {
+    //     return res.status(400).json({
+    //       error: `You already own: ${otherBooks.map(b => b.bookType).join(', ')}`,
+    //       suggestion: 'Buy remaining books individually.'
+    //     });
+    //   }
+    // }
 
     // Create Razorpay order
     const amount = packageInfo.price * 100;
