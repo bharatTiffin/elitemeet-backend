@@ -121,26 +121,26 @@ const BOOK_INFO = {
   },
   [BookType.SCIENCE]: {
     name: 'Complete Science Package',
-    description: 'Master General Science — Physics, Chemistry, Biology all covered',
+    description: 'Master General Science — all covered',
     price: process.env.SCIENCE_BOOK_PRICE || 199,
     originalPrice: process.env.SCIENCE_BOOK_PRICE ? parseInt(process.env.SCIENCE_BOOK_PRICE) + 100 : 299,
-    pages: 95,
-    pyqPages: 22,
+    pages: 170,
+    pyqPages: 100,
     features: [
-      '95 Pages Full Science Notes',
-      '22 Pages PYQs (2012–2025)',
+      '170 Pages Full Science Notes',
+      'Top 100 PYQs Update till 2025',
       'December 2025 Updated',
-      'Physics, Chemistry, Biology covered'
     ],
     highlights: [
-      'Physics: Laws, Motion, Energy, Electricity',
-      'Chemistry: Elements, Compounds, Reactions',
-      'Biology: Human Body, Diseases, Genetics',
-      'Scientific Inventions & Discoveries',
-      'Latest Science & Technology updates',
-      'Space & Defense technology',
-      'Indian Scientists & their contributions',
-      'Exam-focused numerical problems'
+      'Cell -Basic of cell',
+      'Reproduction - Life Cycles',
+      'Respiration - Energy Exchange',
+      'Diseases - Health & Illness',
+      'Nutrition - Fueling Life',
+      'Flower - Plant Anatomy',
+      'Acids - Chemical Basics',
+      'Plant and Animal - Kingdoms overview',
+      'Nervous System - Body Control',
     ],
   },
   [BookType.MODERN_HISTORY]: {
@@ -230,9 +230,9 @@ const PACKAGE_INFO = {
     books: Object.values(BookType),
     features: [
       'Complete syllabus – all 8 subjects',
-      '630+ pages of crisp & exam-oriented notes',
+      '750+ pages of crisp & exam-oriented notes',
       '100 questions of top previous year questions per book',
-      'Save ₹593 with complete pack discount',
+      'Save ₹393 with complete pack discount',
       'Lifetime PDF access with instant delivery'
     ]
   },
@@ -247,7 +247,7 @@ const PACKAGE_INFO = {
       'Complete syllabus except Polity',
       '7 subject-wise books in one pack',
       '100 questions of top previous year questions per book',
-      'Save ₹494 with bundle discount',
+      'Save ₹344 with bundle discount',
       'Lifetime access with instant delivery'
     ]
   }
