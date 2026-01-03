@@ -10,6 +10,22 @@ const PDFPurchase = require("../models/PDFPurchase");
 const { sendEmail, sendEmailWithPDF } = require("../utils/email");
 const TypingPurchase = require("../models/TypingPurchase");
 const PolityPurchase = require("../models/PolityPurchase");
+const BookPurchase = require("../models/BookPurchase");
+const { PackageType } = require("../models/BookPurchase");
+const { sendBookEmail, sendPackageEmail } = require("../utils/email");
+
+
+// Get PDF links from ENV
+const getPDFLinks = () => ({
+  'polity': process.env.POLITY_PDF_LINK,
+  'economics': process.env.ECONOMICS_PDF_LINK,
+  'geography': process.env.GEOGRAPHY_PDF_LINK,
+  'environment': process.env.ENVIRONMENT_PDF_LINK,
+  'science': process.env.SCIENCE_PDF_LINK,
+  'modern-history': process.env.MODERN_HISTORY_PDF_LINK,  // ✅ Hyphen
+  'ancient-history': process.env.ANCIENT_HISTORY_PDF_LINK,  // ✅ Hyphen
+  'medieval-history': process.env.MEDIEVAL_HISTORY_PDF_LINK  // ✅ Hyphen
+});
 
 const handleRazorpayWebhook = async (req, res) => {
   try {
@@ -98,6 +114,12 @@ const handleRazorpayWebhook = async (req, res) => {
     const isPolityPurchase =
   orderDetails?.notes?.type === "polity_purchase" ||
   (await PolityPurchase.findOne({ razorpayOrderId: orderId }));
+
+
+  const isBookPurchase = orderDetails?.notes?.purchaseType === "book" ||
+  orderDetails?.notes?.purchaseType === "package" ||
+  (await BookPurchase.findOne({ orderId: orderId }));
+
 
 // Add this handler after the PDF purchase handler
 // Handle Polity Purchase
@@ -283,6 +305,88 @@ console.log("✅ Polity purchase emails sent successfully");
 
 return res.json({ status: "ok" });
 }
+
+
+// ✅ NEW: Handle Book/Package Purchase
+if (isBookPurchase) {
+  console.log("📚 Processing Book/Package purchase payment");
+
+  // Find purchase
+  const purchase = await BookPurchase.findOne({ orderId });
+
+  if (!purchase) {
+    console.error(`❌ Book purchase not found for order: ${orderId}`);
+    return res.status(404).json({ error: "Purchase not found" });
+  }
+
+  // Prevent duplicate processing
+  if (purchase.status === "completed") {
+    console.log(`ℹ️ Book purchase already completed: ${purchase._id}`);
+    return res.json({ status: "ok" });
+  }
+
+  // Update purchase status
+  purchase.status = "completed";
+  purchase.paymentId = paymentId;
+  await purchase.save();
+
+  console.log(`✅ Book purchase completed: ${orderId}`);
+
+  // Get PDF links from ENV
+  const pdfLinks = getPDFLinks();
+
+  // Send email based on purchase type
+  if (purchase.packageType === "single") {
+    // ✅ SINGLE BOOK PURCHASE
+    const bookType = purchase.bookType;
+    const pdfLink = pdfLinks[bookType];
+
+    if (!pdfLink) {
+      console.error(`❌ PDF link not found for ${bookType}`);
+      return res.status(500).json({ error: "PDF link not configured" });
+    }
+
+    await sendBookEmail({
+      to: purchase.userEmail,
+      userName: purchase.userName,
+      bookType,
+      pdfLink
+    });
+
+    purchase.emailSent = true;
+    await purchase.save();
+
+    console.log(`📧 Single book email sent to ${purchase.userEmail}`);
+
+  } else if (purchase.packageType === "complete-pack" || purchase.packageType === "without-polity") {
+    // ✅ PACKAGE PURCHASE (COMPLETE PACK OR WITHOUT POLITY)
+    const books = purchase.booksIncluded.map(bookType => ({
+      bookType,
+      pdfLink: pdfLinks[bookType]
+    })).filter(b => b.pdfLink);
+
+    if (books.length === 0) {
+      console.error(`❌ No PDF links found for package: ${purchase.packageType}`);
+      return res.status(500).json({ error: "PDF links not configured" });
+    }
+
+    await sendPackageEmail({
+      to: purchase.userEmail,
+      userName: purchase.userName,
+      packageType: purchase.packageType,
+      books
+    });
+
+    purchase.emailSent = true;
+    await purchase.save();
+
+    console.log(`📧 Package email sent to ${purchase.userEmail} (${purchase.packageType})`);
+  }
+
+  return res.json({ status: "ok" });
+}
+
+
         
     // Handle Typing Purchase
     if (isTypingPurchase) {
