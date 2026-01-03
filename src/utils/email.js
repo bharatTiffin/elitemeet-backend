@@ -175,7 +175,7 @@ const sendBookEmail = async (to, userName, bookName, bookType, bookInfo, pdfLink
                 <div class="stat-value">${bookInfo.pages || 'N/A'}</div>
               </div>
               <div class="stat-box">
-                <div class="stat-label">PYQ Pages</div>
+                <div class="stat-label">PYQ Questions</div>
                 <div class="stat-value">${bookInfo.pyqPages || 'N/A'}</div>
               </div>
               <div class="stat-box">
@@ -266,7 +266,7 @@ const sendPackageEmail = async (to, userName, packageName, packageInfo, books, p
           ${emoji} ${displayName}
         </div>
         <div style="font-size: 13px; color: #64748b; margin-bottom: 10px;">
-          📄 ${bookInfo?.pages || 'N/A'} pages + ${bookInfo?.pyqPages || 'N/A'} PYQ pages
+          📄 ${bookInfo?.pages || 'N/A'} pages + ${bookInfo?.pyqPages || 'N/A'} PYQ questions
         </div>
         <a href="${pdfLink}" style="display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: white; text-decoration: none; padding: 10px 24px; border-radius: 6px; font-weight: 600; font-size: 14px;">
           📥 Download PDF
