@@ -222,7 +222,7 @@ const BOOK_INFO = {
 // Package metadata
 const PACKAGE_INFO = {
   [PackageType.COMPLETE_PACK]: {
-    name: 'Complete Pack (All 8 Books)',
+    name: 'Complete Pack (All 8 Books with Their Respective Most Repeated PYQs)',
     description: 'Get all 8 subjects at massive discount — Complete exam preparation',
     price: process.env.COMPLETE_PACK_PRICE || 999,
     originalPrice: process.env.COMPLETE_PACK_PRICE ? parseInt(process.env.COMPLETE_PACK_PRICE) + 200 : 1199,
@@ -233,7 +233,8 @@ const PACKAGE_INFO = {
       '750+ pages of crisp & exam-oriented notes',
       '100 questions of top previous year questions per book',
       'Save ₹393 with complete pack discount',
-      'Lifetime PDF access with instant delivery'
+      'Lifetime PDF access with instant delivery',
+      'Polity, Economics, Geography, Environment, Science, Modern History, Ancient History, Medieval History'
     ]
   },
   [PackageType.WITHOUT_POLITY]: {
