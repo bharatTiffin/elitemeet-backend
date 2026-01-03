@@ -307,86 +307,6 @@ return res.json({ status: "ok" });
 }
 
 
-// Handle Book Purchase (Single book or Package)
-// if (isBookPurchase) {
-//   console.log('📚 Processing Book/Package purchase payment');
-  
-//   let purchase = await BookPurchase.findOne({ orderId: orderId });
-  
-//   if (!purchase) {
-//     console.error('❌ Book purchase not found for order:', orderId);
-//     return res.status(404).json({ error: 'Purchase not found' });
-//   }
-
-//   // Prevent duplicate processing
-//   if (purchase.status === 'completed') {
-//     console.log('ℹ️ Book purchase already completed:', purchase._id);
-//     return res.json({ status: 'ok' });
-//   }
-
-//   // Update purchase status
-//   purchase.status = 'completed';
-//   purchase.paymentId = paymentId;
-//   await purchase.save();
-
-//   console.log(`✅ Book purchase completed: ${purchase.packageType}`);
-
-//   // Get PDF links
-//   const pdfLinks = getPDFLinks();
-  
-//   // Send appropriate email based on package type
-//   try {
-//     if (purchase.packageType === 'single') {
-//       // Single book purchase
-//       const bookType = purchase.bookType;
-//       const bookInfo = require('./bookController').BOOK_INFO[bookType]; // Import metadata
-      
-//       await sendBookEmail({
-//         to: purchase.userEmail,
-//         userName: purchase.userName,
-//         bookName: bookInfo?.name || 'Book',
-//         bookType: bookType,
-//         pdfLink: pdfLinks[bookType],
-//         driveLink: pdfLinks[bookType], // Same link - just for display
-//         amount: purchase.amount,
-//         paymentId: paymentId
-//       });
-      
-//       console.log(`✅ Single book email sent to ${purchase.userEmail}`);
-//     } else {
-//       // Package purchase (complete-pack or without-polity)
-//       const packageInfo = require('./bookController').PACKAGE_INFO[purchase.packageType];
-//       const booksIncluded = purchase.booksIncluded;
-      
-//       // Create pdfLinks and driveLinks objects for the package
-//       const packagePdfLinks = {};
-//       const packageDriveLinks = {};
-      
-//       booksIncluded.forEach(bookType => {
-//         packagePdfLinks[bookType] = pdfLinks[bookType];
-//         packageDriveLinks[bookType] = pdfLinks[bookType]; // Same link
-//       });
-      
-//       await sendPackageEmail({
-//         to: purchase.userEmail,
-//         userName: purchase.userName,
-//         packageName: packageInfo?.name || 'Package',
-//         books: booksIncluded,
-//         pdfLinks: packagePdfLinks,
-//         driveLinks: packageDriveLinks, // Same links - for text display
-//         amount: purchase.amount,
-//         paymentId: paymentId
-//       });
-      
-//       console.log(`✅ Package email sent to ${purchase.userEmail}`);
-//     }
-//   } catch (emailError) {
-//     console.error('❌ Error sending book/package email:', emailError);
-//   }
-
-//   return res.json({ status: 'ok' });
-// }
-
 // Handle Book Purchase - UPDATED VERSION
 if (isBookPurchase) {
   console.log('📚 Processing Book/Package purchase payment');
@@ -425,17 +345,17 @@ if (isBookPurchase) {
       const bookInfo = BOOK_INFO[bookType]; // Full book info
       
       // ✅ Send email to USER with full book details
-      await sendBookEmail({
-        to: purchase.userEmail,
-        userName: purchase.userName,
-        bookName: bookInfo?.name || 'Book',
-        bookType: bookType,
-        bookInfo: bookInfo, // ✅ Pass full book info
-        pdfLink: pdfLinks[bookType],
-        driveLink: pdfLinks[bookType],
-        amount: `₹${purchase.amount}`,
-        paymentId: paymentId
-      });
+      await sendBookEmail(
+        purchase.userEmail,
+        purchase.userName,
+        bookInfo?.name + " Book",
+        bookType,
+        bookInfo,
+        pdfLinks[bookType],
+        pdfLinks[bookType],
+        purchase.amount,
+        paymentId
+      )
       
       console.log('✅ Single book email sent to:', purchase.userEmail);
       
@@ -489,17 +409,19 @@ if (isBookPurchase) {
       });
       
       // ✅ Send email to USER with full package details
-      await sendPackageEmail({
-        to: purchase.userEmail,
-        userName: purchase.userName,
-        packageName: packageInfo?.name || 'Package',
-        packageInfo: packageInfo, // ✅ Pass full package info
-        books: booksIncluded,
-        pdfLinks: packagePdfLinks,
-        driveLinks: packageDriveLinks,
-        amount: `₹${purchase.amount}`,
-        paymentId: paymentId
-      });
+      // Around line 492 - CORRECT WAY
+      await sendPackageEmail(
+        purchase.userEmail,
+        purchase.userName,
+        packageInfo?.name + " Package",
+        packageInfo,
+        booksIncluded,
+        packagePdfLinks,
+        packageDriveLinks,
+        purchase.amount,
+        paymentId
+      )
+
       
       console.log('✅ Package email sent to:', purchase.userEmail);
       
