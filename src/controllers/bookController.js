@@ -21,7 +21,15 @@ const BOOK_INFO = {
       '20 Pages PYQs (2012–2025)',
       'December 2025 Updated',
       '100% PSSSB + Punjab Exam Oriented'
-    ]
+    ],
+    highlights: [
+      'Complete coverage of Indian Constitution',
+      'Union & State Government structure',
+      'Panchayati Raj & Local Bodies',
+      'Judiciary & Constitutional Bodies',
+      'Important Articles & Amendments',
+      'Latest PYQs with solutions'
+    ],
   },
   [BookType.ECONOMICS]: {
     name: 'Complete Economics Package',
@@ -35,7 +43,15 @@ const BOOK_INFO = {
       '18 Pages PYQs (2012–2025)',
       'December 2025 Updated',
       '100% PSSSB + Punjab Exam Oriented'
-    ]
+    ],
+    highlights: [
+      'Indian Economy basics & structure',
+      'Budget & Fiscal Policy',
+      'Banking & Monetary Policy (RBI)',
+      'Economic Survey highlights',
+      'Punjab Economy specifics',
+      'Latest economic developments'
+    ],
   },
   [BookType.GEOGRAPHY]: {
     name: 'Complete Geography Package',
@@ -49,7 +65,15 @@ const BOOK_INFO = {
       '16 Pages PYQs (2012–2025)',
       'December 2025 Updated',
       'Maps & Diagrams included'
-    ]
+    ],
+    highlights: [
+      'Physical Geography essentials',
+      'Indian Geography complete coverage',
+      'Punjab Geography in depth',
+      'World Geography key facts',
+      'Rivers, Mountains, Climate zones',
+      'Economic & Agricultural Geography'
+    ],
   },
   [BookType.ENVIRONMENT]: {
     name: 'Complete Environment Package',
@@ -63,7 +87,17 @@ const BOOK_INFO = {
       '15 Pages PYQs (2012–2025)',
       'December 2025 Updated',
       'Climate Change & Biodiversity covered'
-    ]
+    ],
+    highlights: [
+      'Environmental Ecology basics',
+      'Climate Change & Global Warming',
+      'Biodiversity & Conservation',
+      'Pollution types & control measures',
+      'Environmental Acts & Policies',
+      'Sustainable Development Goals (SDGs)',
+      'Punjab Environmental issues',
+      'Latest environmental updates'
+    ],
   },
   [BookType.SCIENCE]: {
     name: 'Complete Science Package',
@@ -77,7 +111,17 @@ const BOOK_INFO = {
       '22 Pages PYQs (2012–2025)',
       'December 2025 Updated',
       'Physics, Chemistry, Biology covered'
-    ]
+    ],
+    highlights: [
+      'Physics: Laws, Motion, Energy, Electricity',
+      'Chemistry: Elements, Compounds, Reactions',
+      'Biology: Human Body, Diseases, Genetics',
+      'Scientific Inventions & Discoveries',
+      'Latest Science & Technology updates',
+      'Space & Defense technology',
+      'Indian Scientists & their contributions',
+      'Exam-focused numerical problems'
+    ],
   },
   [BookType.MODERN_HISTORY]: {
     name: 'Complete Modern History Package',
@@ -91,7 +135,17 @@ const BOOK_INFO = {
       '19 Pages PYQs (2012–2025)',
       'December 2025 Updated',
       '1757-1947 complete coverage'
-    ]
+    ],
+    highlights: [
+      'British East India Company & expansion',
+      'Indian Freedom Struggle movements',
+      'Important leaders & their contributions',
+      'Revolt of 1857 in detail',
+      'Indian National Congress formation',
+      'Gandhi Era & Non-cooperation movements',
+      'Partition of India & Independence',
+      'Punjab role in freedom struggle'
+    ],
   },
   [BookType.ANCIENT_HISTORY]: {
     name: 'Complete Ancient History Package',
@@ -105,7 +159,17 @@ const BOOK_INFO = {
       '17 Pages PYQs (2012–2025)',
       'December 2025 Updated',
       'Prehistoric to 8th Century CE'
-    ]
+    ],
+    highlights: [
+      'Indus Valley Civilization complete',
+      'Vedic Age & Literature',
+      'Mauryan & Gupta Empires',
+      'Buddhist & Jain traditions',
+      'Indian Art, Architecture & Sculptures',
+      'Ancient Punjab history & culture',
+      'Important dynasties & rulers',
+      'Ancient Indian economy & trade'
+    ],
   },
   [BookType.MEDIEVAL_HISTORY]: {
     name: 'Complete Medieval History Package',
@@ -119,7 +183,17 @@ const BOOK_INFO = {
       '16 Pages PYQs (2012–2025)',
       'December 2025 Updated',
       '8th Century to 1757 CE'
-    ]
+    ],
+    highlights: [
+      'Delhi Sultanate period complete',
+      'Mughal Empire & major rulers',
+      'Sikh Gurus & Sikh Empire',
+      'Bhakti & Sufi movements',
+      'Medieval Indian architecture',
+      'Regional kingdoms & their culture',
+      'Punjab under Mughals & Sikhs',
+      'Transition to British rule'
+    ],
   }
 };
 
@@ -459,5 +533,21 @@ exports.checkBookAccess = async (req, res) => {
   } catch (error) {
     console.error('❌ Error checking book access:', error);
     res.status(500).json({ error: 'Failed to check access' });
+  }
+};
+
+
+exports.getAllBooks = async (req, res) => {
+  try {
+    const booksArray = Object.entries(BOOK_INFO).map(([bookType, info]) => ({
+      id: bookType,
+      type: bookType,
+      ...info
+    }));
+    
+    res.json({ books: booksArray });
+  } catch (error) {
+    console.error('❌ Error fetching all books:', error);
+    res.status(500).json({ error: 'Failed to fetch books' });
   }
 };

@@ -7,13 +7,14 @@ const {
   createBookPurchase,
   createPackagePurchase,
   getMyPurchases,
-  checkBookAccess
+  checkBookAccess,
+  getAllBooks
 } = require('../controllers/bookController');
 
 // ✅ Public routes - Get info
 router.get('/book/:bookType/info', getBookInfo);
 router.get('/package/:packageType/info', getPackageInfo);
-
+router.get('/books/all', getAllBooks);
 // ✅ Protected routes - Purchases
 router.post('/book/:bookType/purchase', auth, createBookPurchase);
 router.post('/package/:packageType/purchase', auth, createPackagePurchase);

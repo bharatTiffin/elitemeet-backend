@@ -308,83 +308,165 @@ return res.json({ status: "ok" });
 
 
 // ✅ NEW: Handle Book/Package Purchase
+// if (isBookPurchase) {
+//   console.log("📚 Processing Book/Package purchase payment");
+
+//   // Find purchase
+//   const purchase = await BookPurchase.findOne({ orderId });
+
+//   if (!purchase) {
+//     console.error(`❌ Book purchase not found for order: ${orderId}`);
+//     return res.status(404).json({ error: "Purchase not found" });
+//   }
+
+//   // Prevent duplicate processing
+//   if (purchase.status === "completed") {
+//     console.log(`ℹ️ Book purchase already completed: ${purchase._id}`);
+//     return res.json({ status: "ok" });
+//   }
+
+//   // Update purchase status
+//   purchase.status = "completed";
+//   purchase.paymentId = paymentId;
+//   await purchase.save();
+
+//   console.log(`✅ Book purchase completed: ${orderId}`);
+
+//   // Get PDF links from ENV
+//   const pdfLinks = getPDFLinks();
+
+//   // Send email based on purchase type
+//   if (purchase.packageType === "single") {
+//     // ✅ SINGLE BOOK PURCHASE
+//     const bookType = purchase.bookType;
+//     const pdfLink = pdfLinks[bookType];
+
+//     if (!pdfLink) {
+//       console.error(`❌ PDF link not found for ${bookType}`);
+//       return res.status(500).json({ error: "PDF link not configured" });
+//     }
+
+//     await sendBookEmail({
+//       to: purchase.userEmail,
+//       userName: purchase.userName,
+//       bookType,
+//       pdfLink
+//     });
+
+//     purchase.emailSent = true;
+//     await purchase.save();
+
+//     console.log(`📧 Single book email sent to ${purchase.userEmail}`);
+
+//   } else if (purchase.packageType === "complete-pack" || purchase.packageType === "without-polity") {
+//     // ✅ PACKAGE PURCHASE (COMPLETE PACK OR WITHOUT POLITY)
+//     const books = purchase.booksIncluded.map(bookType => ({
+//       bookType,
+//       pdfLink: pdfLinks[bookType]
+//     })).filter(b => b.pdfLink);
+
+//     if (books.length === 0) {
+//       console.error(`❌ No PDF links found for package: ${purchase.packageType}`);
+//       return res.status(500).json({ error: "PDF links not configured" });
+//     }
+
+//     await sendPackageEmail({
+//       to: purchase.userEmail,
+//       userName: purchase.userName,
+//       packageType: purchase.packageType,
+//       books
+//     });
+
+//     purchase.emailSent = true;
+//     await purchase.save();
+
+//     console.log(`📧 Package email sent to ${purchase.userEmail} (${purchase.packageType})`);
+//   }
+
+//   return res.json({ status: "ok" });
+// }
+
+
+// Handle Book Purchase (Single book or Package)
 if (isBookPurchase) {
-  console.log("📚 Processing Book/Package purchase payment");
-
-  // Find purchase
-  const purchase = await BookPurchase.findOne({ orderId });
-
+  console.log('📚 Processing Book/Package purchase payment');
+  
+  let purchase = await BookPurchase.findOne({ orderId: orderId });
+  
   if (!purchase) {
-    console.error(`❌ Book purchase not found for order: ${orderId}`);
-    return res.status(404).json({ error: "Purchase not found" });
+    console.error('❌ Book purchase not found for order:', orderId);
+    return res.status(404).json({ error: 'Purchase not found' });
   }
 
   // Prevent duplicate processing
-  if (purchase.status === "completed") {
-    console.log(`ℹ️ Book purchase already completed: ${purchase._id}`);
-    return res.json({ status: "ok" });
+  if (purchase.status === 'completed') {
+    console.log('ℹ️ Book purchase already completed:', purchase._id);
+    return res.json({ status: 'ok' });
   }
 
   // Update purchase status
-  purchase.status = "completed";
+  purchase.status = 'completed';
   purchase.paymentId = paymentId;
   await purchase.save();
 
-  console.log(`✅ Book purchase completed: ${orderId}`);
+  console.log(`✅ Book purchase completed: ${purchase.packageType}`);
 
-  // Get PDF links from ENV
+  // Get PDF links
   const pdfLinks = getPDFLinks();
-
-  // Send email based on purchase type
-  if (purchase.packageType === "single") {
-    // ✅ SINGLE BOOK PURCHASE
-    const bookType = purchase.bookType;
-    const pdfLink = pdfLinks[bookType];
-
-    if (!pdfLink) {
-      console.error(`❌ PDF link not found for ${bookType}`);
-      return res.status(500).json({ error: "PDF link not configured" });
+  
+  // Send appropriate email based on package type
+  try {
+    if (purchase.packageType === 'single') {
+      // Single book purchase
+      const bookType = purchase.bookType;
+      const bookInfo = require('./bookController').BOOK_INFO[bookType]; // Import metadata
+      
+      await sendBookEmail({
+        to: purchase.userEmail,
+        userName: purchase.userName,
+        bookName: bookInfo?.name || 'Book',
+        bookType: bookType,
+        pdfLink: pdfLinks[bookType],
+        driveLink: pdfLinks[bookType], // Same link - just for display
+        amount: purchase.amount,
+        paymentId: paymentId
+      });
+      
+      console.log(`✅ Single book email sent to ${purchase.userEmail}`);
+    } else {
+      // Package purchase (complete-pack or without-polity)
+      const packageInfo = require('./bookController').PACKAGE_INFO[purchase.packageType];
+      const booksIncluded = purchase.booksIncluded;
+      
+      // Create pdfLinks and driveLinks objects for the package
+      const packagePdfLinks = {};
+      const packageDriveLinks = {};
+      
+      booksIncluded.forEach(bookType => {
+        packagePdfLinks[bookType] = pdfLinks[bookType];
+        packageDriveLinks[bookType] = pdfLinks[bookType]; // Same link
+      });
+      
+      await sendPackageEmail({
+        to: purchase.userEmail,
+        userName: purchase.userName,
+        packageName: packageInfo?.name || 'Package',
+        books: booksIncluded,
+        pdfLinks: packagePdfLinks,
+        driveLinks: packageDriveLinks, // Same links - for text display
+        amount: purchase.amount,
+        paymentId: paymentId
+      });
+      
+      console.log(`✅ Package email sent to ${purchase.userEmail}`);
     }
-
-    await sendBookEmail({
-      to: purchase.userEmail,
-      userName: purchase.userName,
-      bookType,
-      pdfLink
-    });
-
-    purchase.emailSent = true;
-    await purchase.save();
-
-    console.log(`📧 Single book email sent to ${purchase.userEmail}`);
-
-  } else if (purchase.packageType === "complete-pack" || purchase.packageType === "without-polity") {
-    // ✅ PACKAGE PURCHASE (COMPLETE PACK OR WITHOUT POLITY)
-    const books = purchase.booksIncluded.map(bookType => ({
-      bookType,
-      pdfLink: pdfLinks[bookType]
-    })).filter(b => b.pdfLink);
-
-    if (books.length === 0) {
-      console.error(`❌ No PDF links found for package: ${purchase.packageType}`);
-      return res.status(500).json({ error: "PDF links not configured" });
-    }
-
-    await sendPackageEmail({
-      to: purchase.userEmail,
-      userName: purchase.userName,
-      packageType: purchase.packageType,
-      books
-    });
-
-    purchase.emailSent = true;
-    await purchase.save();
-
-    console.log(`📧 Package email sent to ${purchase.userEmail} (${purchase.packageType})`);
+  } catch (emailError) {
+    console.error('❌ Error sending book/package email:', emailError);
   }
 
-  return res.json({ status: "ok" });
+  return res.json({ status: 'ok' });
 }
+
 
 
         
