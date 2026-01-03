@@ -203,9 +203,19 @@ const BOOK_NAMES = {
 /**
  * Send email for single book purchase
  */
-const sendBookEmail = async ({ to, userName, bookName, bookType, pdfLink, driveLink, amount, paymentId }) => {
+const sendBookEmail = async (to, userName, bookName, bookType, bookInfo, pdfLink, driveLink, amount, paymentId) => {
   const emoji = getBookEmoji(bookType);
   const displayName = getBookDisplayName(bookType);
+  
+  // Generate features list HTML
+  const featuresHTML = bookInfo.features.map(feature => 
+    `<li style="margin: 8px 0; color: #1f2937;">${feature}</li>`
+  ).join('');
+  
+  // Generate highlights list HTML
+  const highlightsHTML = bookInfo.highlights.map(highlight => 
+    `<li style="margin: 6px 0; color: #475569; font-size: 14px;">✓ ${highlight}</li>`
+  ).join('');
 
   const html = `
     <!DOCTYPE html>
@@ -214,12 +224,20 @@ const sendBookEmail = async ({ to, userName, bookName, bookType, pdfLink, driveL
       <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-center; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 20px; text-align: center; }
         .header h1 { margin: 0; font-size: 24px; }
         .content { padding: 30px 20px; }
         .success-badge { background: #10b981; color: white; display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin-bottom: 20px; }
         .book-card { background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; margin: 20px 0; }
         .book-title { font-size: 22px; font-weight: bold; color: #1e293b; margin-bottom: 15px; }
+        .book-stats { display: flex; gap: 15px; margin: 15px 0; }
+        .stat-box { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; flex: 1; text-align: center; }
+        .stat-label { font-size: 12px; color: #64748b; text-transform: uppercase; }
+        .stat-value { font-size: 18px; font-weight: bold; color: #0f172a; margin-top: 5px; }
+        .features-section { margin: 20px 0; background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 8px; }
+        .highlights-section { margin: 20px 0; background: #f0fdf4; border-left: 4px solid #10b981; padding: 15px; border-radius: 8px; }
+        .section-title { font-size: 16px; font-weight: bold; color: #1e293b; margin-bottom: 10px; }
+        ul { margin: 10px 0; padding-left: 20px; }
         .download-btn { display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: white !important; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: bold; font-size: 16px; margin: 10px 0; text-align: center; width: 100%; box-sizing: border-box; }
         .download-btn:hover { background: linear-gradient(135deg, #059669, #047857); }
         .link-text { background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 12px; margin-top: 12px; font-size: 13px; word-break: break-all; }
@@ -239,18 +257,41 @@ const sendBookEmail = async ({ to, userName, bookName, bookType, pdfLink, driveL
         
         <div class="content">
           <div class="success-badge">✅ Payment Confirmed</div>
-          
           <p style="font-size: 16px; color: #1e293b;">Hi <strong>${userName}</strong>,</p>
           <p style="font-size: 15px; color: #475569;">Your <strong>${displayName}</strong> book is ready! Download it now and start preparing. 🚀</p>
           
           <div class="book-card">
             <div class="book-title">${emoji} ${displayName} Book</div>
-            <a href="${pdfLink}" class="download-btn">
-              📥 Download PDF Now
-            </a>
+            
+            <div class="book-stats">
+              <div class="stat-box">
+                <div class="stat-label">Pages</div>
+                <div class="stat-value">${bookInfo.pages || 'N/A'}</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">PYQ Pages</div>
+                <div class="stat-value">${bookInfo.pyqPages || 'N/A'}</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-label">Price</div>
+                <div class="stat-value">₹${bookInfo.price}</div>
+              </div>
+            </div>
+            
+            <div class="features-section">
+              <div class="section-title">📦 What's Inside</div>
+              <ul>${featuresHTML}</ul>
+            </div>
+            
+            <div class="highlights-section">
+              <div class="section-title">🎯 Topics Covered</div>
+              <ul>${highlightsHTML}</ul>
+            </div>
+            
+            <a href="${pdfLink}" class="download-btn">📥 Download PDF Now</a>
             
             <div class="link-text">
-              <strong>📎 Direct Link:</strong><br>
+              <strong>⚠️ Button not working?</strong><br>
               <a href="${driveLink}" style="color: #b45309; text-decoration: none;">${driveLink}</a>
             </div>
           </div>
@@ -266,18 +307,18 @@ const sendBookEmail = async ({ to, userName, bookName, bookType, pdfLink, driveL
             </tr>
             <tr style="border-bottom: none;">
               <td>Status</td>
-              <td><strong style="color: #10b981;">Delivered</strong></td>
+              <td><strong style="color: #10b981;">✓ Delivered</strong></td>
             </tr>
           </table>
           
           <p style="font-size: 14px; color: #64748b; margin-top: 30px;">
-            📌 <strong>Need Help?</strong> Reply to this email or contact us at <strong>2025eliteacademy@gmail.com</strong>
+            <strong>📌 Need Help?</strong> Reply to this email or contact us at <strong>2025eliteacademy@gmail.com</strong>
           </p>
         </div>
         
         <div class="footer">
           <p style="margin: 0 0 10px 0;"><strong>Elite Academy</strong></p>
-          <p style="margin: 0;">Your Success, Our Mission 🎯</p>
+          <p style="margin: 0;">Your Success, Our Mission 🎓</p>
         </div>
       </div>
     </body>
@@ -285,7 +326,7 @@ const sendBookEmail = async ({ to, userName, bookName, bookType, pdfLink, driveL
   `;
 
   await transporter.sendMail({
-    from: process.env.EMAIL_FROM || '"Elite Academy" <noreply@eliteacademy.com>',
+    from: process.env.EMAIL_FROM || 'Elite Academy <noreply@eliteacademy.com>',
     to,
     subject: `${emoji} Your ${displayName} Book is Ready!`,
     html
@@ -295,21 +336,31 @@ const sendBookEmail = async ({ to, userName, bookName, bookType, pdfLink, driveL
 /**
  * Send email for package purchase (bundles)
  */
-const sendPackageEmail = async ({ to, userName, packageName, books, pdfLinks, driveLinks, amount, paymentId }) => {
+const sendPackageEmail = async (to, userName, packageName, packageInfo, books, pdfLinks, driveLinks, amount, paymentId) => {
   const booksCount = books.length;
-  const packageEmoji = booksCount === 8 ? '🎁' : '📦';
+  const packageEmoji = booksCount === 8 ? '📚' : '📖';
   
-  // Generate book download cards
-  const bookCards = books.map((bookType) => {
+  // Calculate total pages
+  const totalPages = books.reduce((sum, bookType) => {
+    const bookInfo = require('../controllers/bookController').BOOK_INFO[bookType];
+    return sum + (bookInfo?.pages || 0) + (bookInfo?.pyqPages || 0);
+  }, 0);
+  
+  // Generate book download cards with full info
+  const bookCards = books.map(bookType => {
     const emoji = getBookEmoji(bookType);
     const displayName = getBookDisplayName(bookType);
     const pdfLink = pdfLinks[bookType];
     const driveLink = driveLinks[bookType];
+    const bookInfo = require('../controllers/bookController').BOOK_INFO[bookType];
     
     return `
       <div style="background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 10px; padding: 15px; margin: 10px 0;">
         <div style="font-size: 18px; font-weight: bold; color: #1e293b; margin-bottom: 10px;">
           ${emoji} ${displayName}
+        </div>
+        <div style="font-size: 13px; color: #64748b; margin-bottom: 10px;">
+          📄 ${bookInfo?.pages || 'N/A'} pages + ${bookInfo?.pyqPages || 'N/A'} PYQ pages
         </div>
         <a href="${pdfLink}" style="display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: white; text-decoration: none; padding: 10px 24px; border-radius: 6px; font-weight: 600; font-size: 14px;">
           📥 Download PDF
@@ -320,6 +371,11 @@ const sendPackageEmail = async ({ to, userName, packageName, books, pdfLinks, dr
       </div>
     `;
   }).join('');
+  
+  // Generate package features HTML
+  const featuresHTML = packageInfo.features.map(feature => 
+    `<li style="margin: 8px 0; color: #1f2937;">✓ ${feature}</li>`
+  ).join('');
 
   const html = `
     <!DOCTYPE html>
@@ -328,10 +384,15 @@ const sendPackageEmail = async ({ to, userName, packageName, books, pdfLinks, dr
       <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px 20px; text-center; }
+        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px 20px; text-align: center; }
         .header h1 { margin: 0; font-size: 26px; }
         .content { padding: 30px 20px; }
         .success-badge { background: #10b981; color: white; display: inline-block; padding: 8px 16px; border-radius: 20px; font-weight: bold; margin-bottom: 20px; }
+        .package-stats { display: flex; gap: 10px; margin: 20px 0; }
+        .stat-card { background: #f0fdf4; border: 2px solid #10b981; border-radius: 8px; padding: 12px; flex: 1; text-align: center; }
+        .stat-label { font-size: 11px; color: #047857; text-transform: uppercase; font-weight: bold; }
+        .stat-value { font-size: 20px; font-weight: bold; color: #065f46; margin-top: 5px; }
+        .features-box { background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 8px; margin: 20px 0; }
         .info-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         .info-table td { padding: 10px; border-bottom: 1px solid #e2e8f0; }
         .info-table td:first-child { font-weight: 600; color: #64748b; width: 40%; }
@@ -347,9 +408,30 @@ const sendPackageEmail = async ({ to, userName, packageName, books, pdfLinks, dr
         
         <div class="content">
           <div class="success-badge">✅ Payment Confirmed</div>
-          
           <p style="font-size: 16px; color: #1e293b;">Hi <strong>${userName}</strong>,</p>
-          <p style="font-size: 15px; color: #475569;">Your <strong>${packageName}</strong> is ready! You got <strong>${booksCount} books</strong> 📚 — Download all below. 🎉</p>
+          <p style="font-size: 15px; color: #475569;">
+            Your <strong>${packageName}</strong> is ready! You got <strong>${booksCount} books</strong> 🎉 Download all below.
+          </p>
+          
+          <div class="package-stats">
+            <div class="stat-card">
+              <div class="stat-label">Books</div>
+              <div class="stat-value">${booksCount}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Total Pages</div>
+              <div class="stat-value">${totalPages}+</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">You Saved</div>
+              <div class="stat-value">₹${packageInfo.discount || 0}</div>
+            </div>
+          </div>
+          
+          <div class="features-box">
+            <div style="font-size: 16px; font-weight: bold; color: #1e40af; margin-bottom: 10px;">🎁 Package Includes</div>
+            <ul style="margin: 10px 0; padding-left: 20px;">${featuresHTML}</ul>
+          </div>
           
           <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 12px; margin: 20px 0; text-align: center; font-size: 14px;">
             <strong>💡 Pro Tip:</strong> Bookmark this email to access all PDFs anytime!
@@ -373,18 +455,18 @@ const sendPackageEmail = async ({ to, userName, packageName, books, pdfLinks, dr
             </tr>
             <tr style="border-bottom: none;">
               <td>Status</td>
-              <td><strong style="color: #10b981;">All Delivered</strong></td>
+              <td><strong style="color: #10b981;">✓ All Delivered</strong></td>
             </tr>
           </table>
           
           <p style="font-size: 14px; color: #64748b; margin-top: 30px;">
-            📌 <strong>Need Help?</strong> Reply to this email or contact us at <strong>2025eliteacademy@gmail.com</strong>
+            <strong>📌 Need Help?</strong> Reply to this email or contact us at <strong>2025eliteacademy@gmail.com</strong>
           </p>
         </div>
         
         <div class="footer">
           <p style="margin: 0 0 10px 0;"><strong>Elite Academy</strong></p>
-          <p style="margin: 0;">Your Success, Our Mission 🎯</p>
+          <p style="margin: 0;">Your Success, Our Mission 🎓</p>
         </div>
       </div>
     </body>
@@ -392,12 +474,13 @@ const sendPackageEmail = async ({ to, userName, packageName, books, pdfLinks, dr
   `;
 
   await transporter.sendMail({
-    from: process.env.EMAIL_FROM || '"Elite Academy" <noreply@eliteacademy.com>',
+    from: process.env.EMAIL_FROM || 'Elite Academy <noreply@eliteacademy.com>',
     to,
     subject: `${packageEmoji} Your ${packageName} is Ready! (${booksCount} Books)`,
     html
   });
 };
+
 
 
 

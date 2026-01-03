@@ -307,87 +307,87 @@ return res.json({ status: "ok" });
 }
 
 
-// ✅ NEW: Handle Book/Package Purchase
+// Handle Book Purchase (Single book or Package)
 // if (isBookPurchase) {
-//   console.log("📚 Processing Book/Package purchase payment");
-
-//   // Find purchase
-//   const purchase = await BookPurchase.findOne({ orderId });
-
+//   console.log('📚 Processing Book/Package purchase payment');
+  
+//   let purchase = await BookPurchase.findOne({ orderId: orderId });
+  
 //   if (!purchase) {
-//     console.error(`❌ Book purchase not found for order: ${orderId}`);
-//     return res.status(404).json({ error: "Purchase not found" });
+//     console.error('❌ Book purchase not found for order:', orderId);
+//     return res.status(404).json({ error: 'Purchase not found' });
 //   }
 
 //   // Prevent duplicate processing
-//   if (purchase.status === "completed") {
-//     console.log(`ℹ️ Book purchase already completed: ${purchase._id}`);
-//     return res.json({ status: "ok" });
+//   if (purchase.status === 'completed') {
+//     console.log('ℹ️ Book purchase already completed:', purchase._id);
+//     return res.json({ status: 'ok' });
 //   }
 
 //   // Update purchase status
-//   purchase.status = "completed";
+//   purchase.status = 'completed';
 //   purchase.paymentId = paymentId;
 //   await purchase.save();
 
-//   console.log(`✅ Book purchase completed: ${orderId}`);
+//   console.log(`✅ Book purchase completed: ${purchase.packageType}`);
 
-//   // Get PDF links from ENV
+//   // Get PDF links
 //   const pdfLinks = getPDFLinks();
-
-//   // Send email based on purchase type
-//   if (purchase.packageType === "single") {
-//     // ✅ SINGLE BOOK PURCHASE
-//     const bookType = purchase.bookType;
-//     const pdfLink = pdfLinks[bookType];
-
-//     if (!pdfLink) {
-//       console.error(`❌ PDF link not found for ${bookType}`);
-//       return res.status(500).json({ error: "PDF link not configured" });
+  
+//   // Send appropriate email based on package type
+//   try {
+//     if (purchase.packageType === 'single') {
+//       // Single book purchase
+//       const bookType = purchase.bookType;
+//       const bookInfo = require('./bookController').BOOK_INFO[bookType]; // Import metadata
+      
+//       await sendBookEmail({
+//         to: purchase.userEmail,
+//         userName: purchase.userName,
+//         bookName: bookInfo?.name || 'Book',
+//         bookType: bookType,
+//         pdfLink: pdfLinks[bookType],
+//         driveLink: pdfLinks[bookType], // Same link - just for display
+//         amount: purchase.amount,
+//         paymentId: paymentId
+//       });
+      
+//       console.log(`✅ Single book email sent to ${purchase.userEmail}`);
+//     } else {
+//       // Package purchase (complete-pack or without-polity)
+//       const packageInfo = require('./bookController').PACKAGE_INFO[purchase.packageType];
+//       const booksIncluded = purchase.booksIncluded;
+      
+//       // Create pdfLinks and driveLinks objects for the package
+//       const packagePdfLinks = {};
+//       const packageDriveLinks = {};
+      
+//       booksIncluded.forEach(bookType => {
+//         packagePdfLinks[bookType] = pdfLinks[bookType];
+//         packageDriveLinks[bookType] = pdfLinks[bookType]; // Same link
+//       });
+      
+//       await sendPackageEmail({
+//         to: purchase.userEmail,
+//         userName: purchase.userName,
+//         packageName: packageInfo?.name || 'Package',
+//         books: booksIncluded,
+//         pdfLinks: packagePdfLinks,
+//         driveLinks: packageDriveLinks, // Same links - for text display
+//         amount: purchase.amount,
+//         paymentId: paymentId
+//       });
+      
+//       console.log(`✅ Package email sent to ${purchase.userEmail}`);
 //     }
-
-//     await sendBookEmail({
-//       to: purchase.userEmail,
-//       userName: purchase.userName,
-//       bookType,
-//       pdfLink
-//     });
-
-//     purchase.emailSent = true;
-//     await purchase.save();
-
-//     console.log(`📧 Single book email sent to ${purchase.userEmail}`);
-
-//   } else if (purchase.packageType === "complete-pack" || purchase.packageType === "without-polity") {
-//     // ✅ PACKAGE PURCHASE (COMPLETE PACK OR WITHOUT POLITY)
-//     const books = purchase.booksIncluded.map(bookType => ({
-//       bookType,
-//       pdfLink: pdfLinks[bookType]
-//     })).filter(b => b.pdfLink);
-
-//     if (books.length === 0) {
-//       console.error(`❌ No PDF links found for package: ${purchase.packageType}`);
-//       return res.status(500).json({ error: "PDF links not configured" });
-//     }
-
-//     await sendPackageEmail({
-//       to: purchase.userEmail,
-//       userName: purchase.userName,
-//       packageType: purchase.packageType,
-//       books
-//     });
-
-//     purchase.emailSent = true;
-//     await purchase.save();
-
-//     console.log(`📧 Package email sent to ${purchase.userEmail} (${purchase.packageType})`);
+//   } catch (emailError) {
+//     console.error('❌ Error sending book/package email:', emailError);
 //   }
 
-//   return res.json({ status: "ok" });
+//   return res.json({ status: 'ok' });
 // }
 
-
-// Handle Book Purchase (Single book or Package)
+// Handle Book Purchase - UPDATED VERSION
 if (isBookPurchase) {
   console.log('📚 Processing Book/Package purchase payment');
   
@@ -397,75 +397,162 @@ if (isBookPurchase) {
     console.error('❌ Book purchase not found for order:', orderId);
     return res.status(404).json({ error: 'Purchase not found' });
   }
-
+  
   // Prevent duplicate processing
   if (purchase.status === 'completed') {
     console.log('ℹ️ Book purchase already completed:', purchase._id);
     return res.json({ status: 'ok' });
   }
-
+  
   // Update purchase status
   purchase.status = 'completed';
   purchase.paymentId = paymentId;
   await purchase.save();
-
-  console.log(`✅ Book purchase completed: ${purchase.packageType}`);
-
+  
+  console.log('✅ Book purchase completed:', orderId);
+  
   // Get PDF links
   const pdfLinks = getPDFLinks();
+  
+  // Get admin details
+  const admin = await User.findOne({ role: 'admin' });
   
   // Send appropriate email based on package type
   try {
     if (purchase.packageType === 'single') {
       // Single book purchase
       const bookType = purchase.bookType;
-      const bookInfo = require('./bookController').BOOK_INFO[bookType]; // Import metadata
+      const bookInfo = BOOK_INFO[bookType]; // Full book info
       
+      // ✅ Send email to USER with full book details
       await sendBookEmail({
         to: purchase.userEmail,
         userName: purchase.userName,
         bookName: bookInfo?.name || 'Book',
         bookType: bookType,
+        bookInfo: bookInfo, // ✅ Pass full book info
         pdfLink: pdfLinks[bookType],
-        driveLink: pdfLinks[bookType], // Same link - just for display
-        amount: purchase.amount,
+        driveLink: pdfLinks[bookType],
+        amount: `₹${purchase.amount}`,
         paymentId: paymentId
       });
       
-      console.log(`✅ Single book email sent to ${purchase.userEmail}`);
+      console.log('✅ Single book email sent to:', purchase.userEmail);
+      
+      // ✅ Send email to ADMIN
+      if (admin && admin.email) {
+        await sendEmail({
+          to: admin.email,
+          subject: '🔔 New Book Purchase - ' + (bookInfo?.name || 'Book'),
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #3b82f6;">📚 New Book Purchase Notification</h2>
+              <p>You have a new purchase of <strong>${bookInfo?.name || 'a book'}</strong>.</p>
+              
+              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p><strong>Customer Name:</strong> ${purchase.userName}</p>
+                <p><strong>Customer Email:</strong> ${purchase.userEmail}</p>
+                <p><strong>Book Type:</strong> ${bookType}</p>
+                <p><strong>Amount:</strong> ₹${purchase.amount}</p>
+                <p><strong>Payment ID:</strong> ${paymentId}</p>
+                <p><strong>Purchase Date:</strong> ${new Date(purchase.createdAt).toLocaleDateString('en-IN', {
+                  timeZone: 'Asia/Kolkata',
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</p>
+              </div>
+              
+              <p style="color: #6b7280; margin-top: 30px;">
+                Best regards,<br>
+                <strong>Elite Meet System</strong>
+              </p>
+            </div>
+          `
+        });
+        
+        console.log('✅ Admin notification sent for book purchase');
+      }
+      
     } else {
       // Package purchase (complete-pack or without-polity)
-      const packageInfo = require('./bookController').PACKAGE_INFO[purchase.packageType];
+      const packageInfo = PACKAGE_INFO[purchase.packageType];
       const booksIncluded = purchase.booksIncluded;
       
       // Create pdfLinks and driveLinks objects for the package
       const packagePdfLinks = {};
       const packageDriveLinks = {};
-      
       booksIncluded.forEach(bookType => {
         packagePdfLinks[bookType] = pdfLinks[bookType];
-        packageDriveLinks[bookType] = pdfLinks[bookType]; // Same link
+        packageDriveLinks[bookType] = pdfLinks[bookType];
       });
       
+      // ✅ Send email to USER with full package details
       await sendPackageEmail({
         to: purchase.userEmail,
         userName: purchase.userName,
         packageName: packageInfo?.name || 'Package',
+        packageInfo: packageInfo, // ✅ Pass full package info
         books: booksIncluded,
         pdfLinks: packagePdfLinks,
-        driveLinks: packageDriveLinks, // Same links - for text display
-        amount: purchase.amount,
+        driveLinks: packageDriveLinks,
+        amount: `₹${purchase.amount}`,
         paymentId: paymentId
       });
       
-      console.log(`✅ Package email sent to ${purchase.userEmail}`);
+      console.log('✅ Package email sent to:', purchase.userEmail);
+      
+      // ✅ Send email to ADMIN
+      if (admin && admin.email) {
+        const booksList = booksIncluded.map(bt => 
+          `<li>${BOOK_INFO[bt]?.name || bt}</li>`
+        ).join('');
+        
+        await sendEmail({
+          to: admin.email,
+          subject: '🔔 New Package Purchase - ' + (packageInfo?.name || 'Package'),
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #10b981;">📦 New Package Purchase Notification</h2>
+              <p>You have a new purchase of <strong>${packageInfo?.name || 'a package'}</strong>.</p>
+              
+              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p><strong>Customer Name:</strong> ${purchase.userName}</p>
+                <p><strong>Customer Email:</strong> ${purchase.userEmail}</p>
+                <p><strong>Package Type:</strong> ${purchase.packageType}</p>
+                <p><strong>Books Included (${booksIncluded.length}):</strong></p>
+                <ul>${booksList}</ul>
+                <p><strong>Amount:</strong> ₹${purchase.amount}</p>
+                <p><strong>Payment ID:</strong> ${paymentId}</p>
+                <p><strong>Purchase Date:</strong> ${new Date(purchase.createdAt).toLocaleDateString('en-IN', {
+                  timeZone: 'Asia/Kolkata',
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}</p>
+              </div>
+              
+              <p style="color: #6b7280; margin-top: 30px;">
+                Best regards,<br>
+                <strong>Elite Meet System</strong>
+              </p>
+            </div>
+          `
+        });
+        
+        console.log('✅ Admin notification sent for package purchase');
+      }
     }
+    
   } catch (emailError) {
     console.error('❌ Error sending book/package email:', emailError);
   }
-
+  
   return res.json({ status: 'ok' });
 }
+
 
 
 
