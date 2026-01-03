@@ -14,21 +14,27 @@ const BOOK_INFO = {
     description: 'Complete PSSSB & Punjab Exams Polity Package for scoring full marks',
     price: process.env.POLITY_BOOK_PRICE || 199,
     originalPrice: process.env.POLITY_BOOK_PRICE ? parseInt(process.env.POLITY_BOOK_PRICE) + 100 : 299,
-    pages: 90,
-    pyqPages: 20,
+    pages: 95,
+    pyqPages: 100,
     features: [
-      '90 Pages Full Polity Notes',
-      '20 Pages PYQs (2012–2025)',
+      '95 Pages Full Polity Notes',
+      'Top 100 PYQs Update till 2025',
       'December 2025 Updated',
       '100% PSSSB + Punjab Exam Oriented'
     ],
     highlights: [
-      'Complete coverage of Indian Constitution',
-      'Union & State Government structure',
-      'Panchayati Raj & Local Bodies',
-      'Judiciary & Constitutional Bodies',
-      'Important Articles & Amendments',
-      'Latest PYQs with solutions'
+      'Complete coverage of Indian Polity & Constitution',
+      'Historical evolution of the Constitution',
+      'Fundamental Rights, Duties & DPSPs explained',
+      'Union, State & Local Government structure',
+      'President, Prime Minister & Parliament',
+      'Judiciary: Supreme Court & High Courts',
+      'Emergency provisions & Constitutional amendments',
+      'Panchayati Raj & Municipal governance',
+      'Election Commission & Electoral reforms',
+      'Major Constitutional & statutory bodies',
+      'Union Territories & special area administration',
+      'Punjab-specific constitutional & governance topics'
     ],
   },
   [BookType.ECONOMICS]: {
@@ -36,21 +42,27 @@ const BOOK_INFO = {
     description: 'Master Economics for PSSSB exams — From basics to advanced concepts',
     price: process.env.ECONOMICS_BOOK_PRICE || 199,
     originalPrice: process.env.ECONOMICS_BOOK_PRICE ? parseInt(process.env.ECONOMICS_BOOK_PRICE) + 100 : 299,
-    pages: 85,
-    pyqPages: 18,
+    pages: 60,
+    pyqPages: 100,
     features: [
-      '85 Pages Full Economics Notes',
-      '18 Pages PYQs (2012–2025)',
+      '60 Pages Full Economics Notes',
+      'Top PYQs Updated till 2025',
       'December 2025 Updated',
       '100% PSSSB + Punjab Exam Oriented'
     ],
     highlights: [
-      'Indian Economy basics & structure',
-      'Budget & Fiscal Policy',
-      'Banking & Monetary Policy (RBI)',
-      'Economic Survey highlights',
-      'Punjab Economy specifics',
-      'Latest economic developments'
+      'Economics basics & economic systems',
+      'Micro & macro economic concepts',
+      'Economic growth, development & HDI',
+      'National income concepts & measurements',
+      'Inflation, recession & economic cycles',
+      'Demand, supply & market laws',
+      'Elasticity, special goods & public goods',
+      'Taxation system in India & GST',
+      'Direct, indirect & international taxes',
+      'Economic planning & Five Year Plans',
+      'NITI Aayog & development strategies',
+      'Industries, MSMEs & Make in India'
     ],
   },
   [BookType.GEOGRAPHY]: {
@@ -58,21 +70,22 @@ const BOOK_INFO = {
     description: 'Complete Geography preparation — India, Punjab & World Geography',
     price: process.env.GEOGRAPHY_BOOK_PRICE || 199,
     originalPrice: process.env.GEOGRAPHY_BOOK_PRICE ? parseInt(process.env.GEOGRAPHY_BOOK_PRICE) + 100 : 299,
-    pages: 80,
-    pyqPages: 16,
+    pages: 140,
+    pyqPages: 100,
     features: [
-      '80 Pages Full Geography Notes',
-      '16 Pages PYQs (2012–2025)',
+      '140 Pages Full Geography Notes',
+      'Top PYQs Updated till 2025',
       'December 2025 Updated',
       'Maps & Diagrams included'
     ],
     highlights: [
-      'Physical Geography essentials',
-      'Indian Geography complete coverage',
-      'Punjab Geography in depth',
-      'World Geography key facts',
-      'Rivers, Mountains, Climate zones',
-      'Economic & Agricultural Geography'
+      'The Solar System',
+      'Terrestrial & Jovian Planets',
+      'Earth\'s Shape & Motion',
+      'Rocks, Continents, and Oceans',
+      'Geomorphological Processes',
+      'Atmosphere Evolution & Layers',
+      'India and Its Location',
     ],
   },
   [BookType.ENVIRONMENT]: {
@@ -80,23 +93,30 @@ const BOOK_INFO = {
     description: 'Complete Environment & Ecology preparation with latest updates',
     price: process.env.ENVIRONMENT_BOOK_PRICE || 199,
     originalPrice: process.env.ENVIRONMENT_BOOK_PRICE ? parseInt(process.env.ENVIRONMENT_BOOK_PRICE) + 100 : 299,
-    pages: 75,
-    pyqPages: 15,
+    pages: 45,
+    pyqPages: 100,
     features: [
-      '75 Pages Full Environment Notes',
-      '15 Pages PYQs (2012–2025)',
+      '45 Pages Full Environment Notes',
+      'Top 100 PYQs Update till 2025',
       'December 2025 Updated',
       'Climate Change & Biodiversity covered'
     ],
     highlights: [
-      'Environmental Ecology basics',
-      'Climate Change & Global Warming',
-      'Biodiversity & Conservation',
-      'Pollution types & control measures',
-      'Environmental Acts & Policies',
-      'Sustainable Development Goals (SDGs)',
-      'Punjab Environmental issues',
-      'Latest environmental updates'
+      'Complete coverage of environmental science basics',
+      'Environment components & ecological principles',
+      'Ecosystem organisation, services & energy flow',
+      'Indian biomes, biosphere & biodiversity',
+      'Ecological succession, adaptation & niche',
+      'Population ecology & life history strategies',
+      'Terrestrial & aquatic ecosystems',
+      'Deforestation, desertification & eutrophication',
+      'Wetlands, mangroves, estuaries & coral reefs',
+      'Biogeochemical cycles & nutrient flow',
+      'Climate change & greenhouse gases',
+      'Air Quality Index (AQI) – India',
+      'International environmental conventions',
+      'Heavy metal pollution & related diseases',
+      'Previous year questions & exam practice'
     ],
   },
   [BookType.SCIENCE]: {
@@ -128,23 +148,23 @@ const BOOK_INFO = {
     description: 'Complete Modern History (1757-1947) — Freedom struggle and British rule',
     price: process.env.MODERN_HISTORY_BOOK_PRICE || 199,
     originalPrice: process.env.MODERN_HISTORY_BOOK_PRICE ? parseInt(process.env.MODERN_HISTORY_BOOK_PRICE) + 100 : 299,
-    pages: 88,
-    pyqPages: 19,
+    pages: 125,
+    pyqPages: 100,
     features: [
-      '88 Pages Full Modern History Notes',
-      '19 Pages PYQs (2012–2025)',
+      '125 Pages Full Modern History Notes',
+      'Top 100 PYQs Update till 2025',
       'December 2025 Updated',
       '1757-1947 complete coverage'
     ],
     highlights: [
-      'British East India Company & expansion',
-      'Indian Freedom Struggle movements',
-      'Important leaders & their contributions',
-      'Revolt of 1857 in detail',
-      'Indian National Congress formation',
-      'Gandhi Era & Non-cooperation movements',
-      'Partition of India & Independence',
-      'Punjab role in freedom struggle'
+      'Advent of European',
+      'Socio religious reform',
+      '1857 revolt',
+      'Formation of Indian national congress',
+      'Important session of Indian national congress',
+      'Mahatma Gandhi',
+      'All Governor and viceroy and work',
+      '1905 to 1947 struggle'
     ],
   },
   [BookType.ANCIENT_HISTORY]: {
@@ -152,23 +172,24 @@ const BOOK_INFO = {
     description: 'Complete Ancient History — From Indus Valley to 8th Century',
     price: process.env.ANCIENT_HISTORY_BOOK_PRICE || 199,
     originalPrice: process.env.ANCIENT_HISTORY_BOOK_PRICE ? parseInt(process.env.ANCIENT_HISTORY_BOOK_PRICE) + 100 : 299,
-    pages: 82,
-    pyqPages: 17,
+    pages: 140,
+    pyqPages: 100,
     features: [
-      '82 Pages Full Ancient History Notes',
-      '17 Pages PYQs (2012–2025)',
+      '140 Pages Full Ancient History Notes',
+      'Top 100 PYQs Update till 2025',
       'December 2025 Updated',
       'Prehistoric to 8th Century CE'
     ],
     highlights: [
-      'Indus Valley Civilization complete',
-      'Vedic Age & Literature',
-      'Mauryan & Gupta Empires',
-      'Buddhist & Jain traditions',
-      'Indian Art, Architecture & Sculptures',
-      'Ancient Punjab history & culture',
-      'Important dynasties & rulers',
-      'Ancient Indian economy & trade'
+      'Stone Age',
+      'Indus Valley civilization',
+      'Vedic Age',
+      'Jainism',
+      'Buddhism',
+      'Mahajanapadas',
+      'Maurya dynasty',
+      'Gupta period',
+      'Sangam and Tripartite'
     ],
   },
   [BookType.MEDIEVAL_HISTORY]: {
@@ -176,23 +197,24 @@ const BOOK_INFO = {
     description: 'Complete Medieval History (8th-18th Century) — Delhi Sultanate, Mughal Empire',
     price: process.env.MEDIEVAL_HISTORY_BOOK_PRICE || 199,
     originalPrice: process.env.MEDIEVAL_HISTORY_BOOK_PRICE ? parseInt(process.env.MEDIEVAL_HISTORY_BOOK_PRICE) + 100 : 299,
-    pages: 78,
-    pyqPages: 16,
+    pages: 165,
+    pyqPages: 100,
     features: [
-      '78 Pages Full Medieval History Notes',
-      '16 Pages PYQs (2012–2025)',
+      '165 Pages Full Medieval History Notes',
+      'Top 100 PYQs Update till 2025',
       'December 2025 Updated',
       '8th Century to 1757 CE'
     ],
     highlights: [
-      'Delhi Sultanate period complete',
-      'Mughal Empire & major rulers',
-      'Sikh Gurus & Sikh Empire',
-      'Bhakti & Sufi movements',
-      'Medieval Indian architecture',
-      'Regional kingdoms & their culture',
-      'Punjab under Mughals & Sikhs',
-      'Transition to British rule'
+      "Muslim invasions",
+      "Delhi Sultanate",
+      "Slave dynasty",
+      "Khilji - Tughlaq",
+      "Sayyid - Lodi",
+      "Mughals",
+      "Later Mughals",
+      "Maratha",
+      "Gurus , Sufi , Bhakti movement"
     ],
   }
 };
@@ -207,11 +229,11 @@ const PACKAGE_INFO = {
     discount: 200,
     books: Object.values(BookType),
     features: [
-      'All 8 Subject Books (630+ pages)',
-      'Complete PYQs Collection (140+ pages)',
-      'Save ₹593 (37% discount)',
-      'Lifetime access to all PDFs',
-      'Email delivery within 5 minutes'
+      'Complete syllabus – all 8 subjects',
+      '630+ pages of crisp & exam-oriented notes',
+      '100 questions of top previous year questions per book',
+      'Save ₹593 with complete pack discount',
+      'Lifetime PDF access with instant delivery'
     ]
   },
   [PackageType.WITHOUT_POLITY]: {
@@ -222,11 +244,11 @@ const PACKAGE_INFO = {
     discount: 200,
     books: Object.values(BookType).filter(b => b !== BookType.POLITY),
     features: [
-      '7 Subject Books (540+ pages)',
-      'Complete PYQs Collection (120+ pages)',
-      'Save ₹494 (35% discount)',
-      'Perfect for existing Polity buyers',
-      'Email delivery within 5 minutes'
+      'Complete syllabus except Polity',
+      '7 subject-wise books in one pack',
+      '100 questions of top previous year questions per book',
+      'Save ₹494 with bundle discount',
+      'Lifetime access with instant delivery'
     ]
   }
 };
