@@ -222,7 +222,7 @@ const BOOK_INFO = {
 // Package metadata
 const PACKAGE_INFO = {
   [PackageType.COMPLETE_PACK]: {
-    name: 'Complete Pack (All 8 Books with Their Respective Most Repeated PYQs)',
+    name: 'Complete Pack (All 8 e-Books with Their Respective Most Repeated PYQs)',
     description: 'Get all 8 subjects at massive discount — Complete exam preparation',
     price: process.env.COMPLETE_PACK_PRICE || 999,
     originalPrice: process.env.COMPLETE_PACK_PRICE ? parseInt(process.env.COMPLETE_PACK_PRICE) + 200 : 1199,
@@ -239,14 +239,14 @@ const PACKAGE_INFO = {
   },
   [PackageType.WITHOUT_POLITY]: {
     name: 'All Books Except Polity',
-    description: 'Already have Polity? Get the remaining 7 books at discounted price',
+    description: 'Already have Polity? Get the remaining 7 e-books at discounted price',
     price: process.env.WITHOUT_POLITY_PRICE || 899,
     originalPrice: process.env.WITHOUT_POLITY_PRICE ? parseInt(process.env.WITHOUT_POLITY_PRICE) + 200 : 1099,
     discount: 200,
     books: Object.values(BookType).filter(b => b !== BookType.POLITY),
     features: [
       'Complete syllabus except Polity',
-      '7 subject-wise books in one pack',
+      '7 subject-wise e-books in one pack',
       '100 questions of top previous year questions per book',
       'Save ₹344 with bundle discount',
       'Lifetime access with instant delivery'
