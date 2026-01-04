@@ -238,7 +238,7 @@ const PACKAGE_INFO = {
     ]
   },
   [PackageType.WITHOUT_POLITY]: {
-    name: 'All Books Except Polity',
+    name: 'All e-Books Except Polity',
     description: 'Already have Polity? Get the remaining 7 e-books at discounted price',
     price: process.env.WITHOUT_POLITY_PRICE || 899,
     originalPrice: process.env.WITHOUT_POLITY_PRICE ? parseInt(process.env.WITHOUT_POLITY_PRICE) + 200 : 1099,
