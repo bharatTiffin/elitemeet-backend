@@ -13,6 +13,7 @@ connectDB();
 // Cloudinary (for job resume uploads)
 cloudinaryConnect();
 
+
 // CORS configuration
 app.use(cors({
   origin: [
