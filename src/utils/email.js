@@ -1849,51 +1849,61 @@ const sendPyqsEmail = async (purchase, paymentId) => {
 
     const userHtml = `
       <div style="font-family: Arial, sans-serif; max-width:640px; margin:0 auto; padding:10px; background:#f8fafc;">
-        <div style="background:linear-gradient(135deg,#0f766e 0%,#2563eb 100%); padding:22px 20px; border-radius:14px 14px 0 0; color:#fff; text-align:center;">
+        <div style="background:linear-gradient(135deg,#0f766e 0%,#2563eb 100%); padding:20px 18px; border-radius:14px 14px 0 0; color:#fff; text-align:center;">
           <div style="display:inline-block; background:rgba(255,255,255,0.16); padding:6px 12px; border-radius:999px; font-size:12px; font-weight:700; letter-spacing:0.3px; margin-bottom:10px;">PAYMENT CONFIRMED</div>
-          <h1 style="margin:0; font-size:26px; line-height:1.2;">Your PYQs Book Access is Ready</h1>
+          <h1 style="margin:0; font-size:25px; line-height:1.2;">Your PYQs Book Access is Ready</h1>
           <p style="margin:8px 0 0 0; font-size:15px; opacity:0.95; line-height:1.5;">You can now open the <strong>PYQs Book</strong> and the <strong>Excise Inspector Mock Test</strong> on the app.</p>
         </div>
 
-        <div style="background:#ffffff; padding:18px; border-radius:0 0 14px 14px; box-shadow:0 8px 24px rgba(15,23,42,0.08); border:1px solid #e5e7eb; border-top:none;">
-          <p style="font-size:15px; color:#0f172a; margin:0 0 12px 0;">Hi <strong>${purchase.fullName}</strong>,</p>
-          <p style="font-size:14px; color:#334155; line-height:1.6; margin:0 0 14px 0;">Your payment has been received successfully. Please use the same email address used for this purchase while logging in.</p>
+        <div style="background:#ffffff; padding:16px; border-radius:0 0 14px 14px; box-shadow:0 8px 24px rgba(15,23,42,0.08); border:1px solid #e5e7eb; border-top:none;">
+          <p style="font-size:15px; color:#0f172a; margin:0 0 10px 0;">Hi <strong>${purchase.fullName}</strong>,</p>
+          <p style="font-size:14px; color:#334155; line-height:1.6; margin:0 0 12px 0;">Your payment has been received successfully. Please use the same email address used for this purchase while logging in.</p>
 
-          <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:12px; padding:14px; margin:14px 0;">
+          <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:12px; padding:12px; margin:12px 0;">
             <div style="font-size:15px; font-weight:700; color:#047857; margin-bottom:8px;">Step 1: Log in with this email</div>
             <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px; font-family:monospace; font-size:13px; color:#065f46; word-break:break-all; margin-bottom:8px;">
               ${purchase.email}
             </div>
-            <p style="margin:0; color:#64748b; font-size:12px; line-height:1.5;">If you already have an account, log in with this email. If not, create one using the same email only.</p>
+            <p style="margin:0; color:#64748b; font-size:12px; line-height:1.5;">Your login credentials for website access are this same email ID and the password below.</p>
           </div>
 
-          <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:14px; margin:14px 0;">
-            <div style="font-size:15px; font-weight:700; color:#1d4ed8; margin-bottom:8px;">Step 2: Download the Elite Academy app</div>
-            <p style="margin:0 0 10px 0; color:#334155; font-size:13px; line-height:1.5;">Install the app to access your PYQs Book and Excise Inspector Mock Test anytime.</p>
+          <div style="background:#ecfdf5; border:1px solid #a7f3d0; border-radius:12px; padding:12px; margin:12px 0;">
+            <div style="font-size:15px; font-weight:700; color:#047857; margin-bottom:8px;">Password for website access</div>
+            <div style="background:#fff; border:1px solid #d1fae5; border-radius:8px; padding:10px; font-family:monospace; font-size:13px; color:#065f46; word-break:break-all; margin-bottom:8px;">
+              ${purchase.appPassword}
+            </div>
+            <p style="margin:0; color:#64748b; font-size:12px; line-height:1.5;">If you already have an account, log in with this email and password. If not, create one using the same email only.</p>
+          </div>
+
+          <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:12px; margin:12px 0;">
+            <div style="font-size:15px; font-weight:700; color:#c2410c; margin-bottom:8px;">Step 2: Open the website</div>
+            <p style="margin:0 0 8px 0; color:#334155; font-size:13px; line-height:1.5;">Open the website below and log in with the same email and password to access your PYQs Book first.</p>
+            <div style="margin-top:8px;">
+              <a href="${siteLink}" style="display:inline-block; background:linear-gradient(135deg,#0f766e 0%,#2563eb 100%); color:#fff; text-decoration:none; padding:11px 18px; border-radius:9px; font-weight:700; font-size:13px; margin-right:8px; margin-bottom:8px;">Open Website</a>
+            </div>
+            <p style="margin:4px 0 0 0; color:#ea580c; font-weight:700; font-size:13px; word-break:break-all;">${siteLink}</p>
+          </div>
+
+          <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px; margin:12px 0;">
+            <div style="font-size:15px; font-weight:700; color:#1d4ed8; margin-bottom:8px;">Step 3: Download the Elite Academy app</div>
+            <p style="margin:0 0 10px 0; color:#334155; font-size:13px; line-height:1.5;">Install the app to access your PYQs Book and Excise Inspector Mock Test anytime. Use the same email ID only, because only this email has access.</p>
             <div style="display:block; margin-bottom:8px;">
               <a href="${playStoreLink}" style="display:block; background:#16a34a; color:#fff; text-decoration:none; padding:11px 14px; border-radius:9px; font-weight:700; text-align:center; margin-bottom:8px;">Download on Google Play</a>
               <a href="${appStoreLink}" style="display:block; background:#111827; color:#fff; text-decoration:none; padding:11px 14px; border-radius:9px; font-weight:700; text-align:center;">Download on the App Store</a>
             </div>
           </div>
 
-          <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:14px; margin:14px 0;">
-            <div style="font-size:15px; font-weight:700; color:#c2410c; margin-bottom:8px;">Step 3: Open Courses and start learning</div>
-            <p style="margin:0 0 8px 0; color:#334155; font-size:13px; line-height:1.5;">First you will see <strong>PYQs Book access</strong>, and then you will also get <strong>Excise Inspector Mock Test</strong> access in the Courses section. Your website login credentials are the same email ID you used for this payment.</p>
-            <div style="background:#fff; border:1px solid #fdba74; border-radius:8px; padding:10px; margin-top:8px;">
-              <a href="${siteLink}" style="color:#ea580c; font-weight:700; text-decoration:none; word-break:break-all; font-size:13px;">Open website: ${siteLink}</a>
-            </div>
+          <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:12px; margin:12px 0;">
+            <div style="font-size:15px; font-weight:700; color:#c2410c; margin-bottom:8px;">Step 4: Open Courses and start learning</div>
+            <p style="margin:0; color:#334155; font-size:13px; line-height:1.5;">First you will see <strong>PYQs Book access</strong>, and then you will also get <strong>Excise Inspector Mock Test</strong> access in the Courses section.</p>
           </div>
 
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; margin:14px 0;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px; margin:12px 0;">
             <div style="font-size:14px; font-weight:700; color:#0f172a; margin-bottom:6px;">Need help?</div>
             <p style="margin:0; color:#475569; font-size:13px; line-height:1.6;">Call <strong>7696954686</strong> for any issue. Make sure the login email matches the payment email.</p>
           </div>
 
-          <div style="text-align:center; margin-top:16px;">
-            <a href="${siteLink}" style="display:inline-block; background:linear-gradient(135deg,#0f766e 0%,#2563eb 100%); color:#fff; text-decoration:none; padding:12px 22px; border-radius:9px; font-weight:700; font-size:14px;">Open Elite Academy Website</a>
-          </div>
-
-          <p style="margin:16px 0 0 0; color:#0f172a; font-size:13px;">Best regards,<br><strong>Elite Academy Team</strong></p>
+          <p style="margin:14px 0 0 0; color:#0f172a; font-size:13px;">Best regards,<br><strong>Elite Academy Team</strong></p>
         </div>
       </div>
     `;
