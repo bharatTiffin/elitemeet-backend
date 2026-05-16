@@ -1886,7 +1886,7 @@ const sendPyqsEmail = async (purchase, paymentId) => {
 
           <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:12px; margin:12px 0;">
             <div style="font-size:15px; font-weight:700; color:#1d4ed8; margin-bottom:8px;">Step 3: Download the Elite Academy app</div>
-            <p style="margin:0 0 10px 0; color:#334155; font-size:13px; line-height:1.5;">Install the app to access your PYQs Book and Excise Inspector Mock Test anytime. Use the same email ID only, because only this email has access.</p>
+            <p style="margin:0 0 10px 0; color:#334155; font-size:13px; line-height:1.5;">Install the app to access Excise Inspector Mock Test anytime. Use the same email ID only, because only this email has access.</p>
             <div style="display:block; margin-bottom:8px;">
               <a href="${playStoreLink}" style="display:block; background:#16a34a; color:#fff; text-decoration:none; padding:11px 14px; border-radius:9px; font-weight:700; text-align:center; margin-bottom:8px;">Download on Google Play</a>
               <a href="${appStoreLink}" style="display:block; background:#111827; color:#fff; text-decoration:none; padding:11px 14px; border-radius:9px; font-weight:700; text-align:center;">Download on the App Store</a>
@@ -1896,6 +1896,14 @@ const sendPyqsEmail = async (purchase, paymentId) => {
           <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:12px; margin:12px 0;">
             <div style="font-size:15px; font-weight:700; color:#c2410c; margin-bottom:8px;">Step 4: Open Courses and start learning</div>
             <p style="margin:0; color:#334155; font-size:13px; line-height:1.5;">First you will see <strong>PYQs Book access</strong>, and then you will also get <strong>Excise Inspector Mock Test</strong> access in the Courses section.</p>
+          </div>
+
+          <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:12px; margin:12px 0;">
+            <div style="font-size:15px; font-weight:700; color:#c2410c; margin-bottom:8px;">Step 5: Join the Elite Academy Community</div>
+            <p style="margin:0; color:#334155; font-size:13px; line-height:1.5;">Join our community of learners and stay updated with the latest news and updates and guidance sessions.</p>
+            <p style="margin:0 0 10px 0;font-size:13px;color:#64748b;font-weight:500;">Join WhatsApp Community</p>
+            <a href="${whatsappLink}" style="display:inline-block;background:linear-gradient(135deg,#25d366 0%,#128c7e 100%);color:#fff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:8px;box-shadow:0 2px 8px rgba(37,211,102,0.3);">👉 Join WhatsApp Group</a>
+            <p style="margin:10px 0 0 0;font-size:11px;color:#94a3b8;word-break:break-all;">${whatsappLink}</p>
           </div>
 
           <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px; margin:12px 0;">
