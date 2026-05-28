@@ -70,6 +70,7 @@ app.use("/api/videocrashcoaching", require("./src/routes/videocrashcoachingRoute
 app.use("/api/crashcourse", require("./src/routes/crashcourseRoutes.js"));
 app.use("/api/job", require("./src/routes/jobRoutes.js"));
 app.use("/api/french-course", require("./src/routes/frenchCourseRoutes.js"));
+app.use("/api/digital-offline-demo", require("./src/routes/digitalOfflineDemoRoutes.js"));
 app.use("/api/weeklytest", require("./src/routes/weeklytestSeries.js"));
 app.use("/api/sectional-test", require("./src/routes/sectionalTestSeriesRoutes.js"));
 app.use("/api/pstet", require("./src/routes/pstetRoutes.js"));

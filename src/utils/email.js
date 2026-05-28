@@ -5,6 +5,19 @@ const fs = require("fs");
 const User = require("../models/User");
 require('dotenv').config();
 
+const DIGITAL_OFFLINE_BRANCHES = {
+  "fatehgarh-sahib": {
+    label: "Fatehgarh Sahib Digital Offline Demo",
+    address: "Ist Floor, Showroom No 18, Above Pb 23 Out Fit, City Center Sirhind, Lincoln Road",
+    mapsLink: "https://maps.app.goo.gl/x21iBBNnNLLeF72z8?g_st=iwb",
+  },
+  chandigarh: {
+    label: "Chandigarh Offline Coaching",
+    address: "SCO 144, Sector 24D, Chandigarh",
+    mapsLink: "https://maps.app.goo.gl/nkiAPjq2FfHmsWcF6",
+  },
+};
+
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: Number(process.env.EMAIL_PORT) || 587,
@@ -386,6 +399,75 @@ const sendPackageEmail = async (to, userName, packageName, packageInfo, books, p
     subject: `${packageEmoji} Your ${packageName} is Ready! (${booksCount} Books)`,
     html
   });
+};
+
+const sendDigitalOfflineDemoEmail = async (registration, paymentId) => {
+  const admin = await User.findOne({ role: "admin" });
+  const branchInfo = DIGITAL_OFFLINE_BRANCHES[registration.branch] || DIGITAL_OFFLINE_BRANCHES["fatehgarh-sahib"];
+  const supportLine = "7696954686 / 9056653906";
+
+  const userHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #0f172a; color: #e5e7eb; padding: 24px; border-radius: 16px;">
+      <div style="background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%); padding: 24px; border-radius: 14px; text-align: center; color: white;">
+        <h1 style="margin: 0; font-size: 26px;">Digital Offline Demo Registration Confirmed</h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.92;">Elite Academy</p>
+      </div>
+
+      <div style="padding: 24px 8px 8px 8px;">
+        <p style="font-size: 16px; line-height: 1.7;">Hi <strong>${registration.fullName}</strong>, your payment was successful.</p>
+
+        <div style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); border-radius: 14px; padding: 18px; margin: 18px 0;">
+          <p style="margin: 0 0 10px 0;"><strong>Amount Paid:</strong> ₹${registration.amount}</p>
+          <p style="margin: 0 0 10px 0;"><strong>Branch:</strong> ${branchInfo.label}</p>
+          <p style="margin: 0 0 10px 0;"><strong>Address:</strong> ${branchInfo.address}</p>
+          <p style="margin: 0;"><strong>Google Maps:</strong> <a href="${branchInfo.mapsLink}" style="color: #93c5fd;">Open Location</a></p>
+        </div>
+
+        <div style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.25); border-radius: 14px; padding: 16px; margin: 18px 0;">
+          <p style="margin: 0 0 10px 0; color: #a7f3d0; font-weight: bold;">Demo Dates: 1 June, 2 June, 3 June</p>
+          <p style="margin: 0; color: #d1fae5;">Please be present on all demo days. Refund requests must be raised on the same day you attend the demo. If you continue with the course, this fee will be adjusted in the final fees.</p>
+        </div>
+
+        <p style="font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+          If you do not receive the email within 5 minutes, please call or WhatsApp ${supportLine}.
+        </p>
+      </div>
+    </div>
+  `;
+
+  const adminHtml = `
+    <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto; background: #111827; color: #e5e7eb; padding: 24px; border-radius: 16px;">
+      <h2 style="margin-top: 0; color: #fbbf24;">New Digital Offline Demo Registration</h2>
+      <p><strong>Name:</strong> ${registration.fullName}</p>
+      <p><strong>Email:</strong> ${registration.email}</p>
+      <p><strong>Phone:</strong> ${registration.mobile}</p>
+      <p><strong>Address:</strong> ${registration.address}</p>
+      <p><strong>Branch:</strong> ${branchInfo.label}</p>
+      <p><strong>Amount:</strong> ₹${registration.amount}</p>
+      <p><strong>Payment ID:</strong> ${paymentId}</p>
+      <p><strong>Maps:</strong> <a href="${branchInfo.mapsLink}" style="color: #93c5fd;">${branchInfo.mapsLink}</a></p>
+    </div>
+  `;
+
+  const emailPromises = [
+    sendEmail({
+      to: registration.email,
+      subject: "Digital Offline Demo Registration Confirmed - Elite Academy",
+      html: userHtml,
+    }),
+  ];
+
+  if (admin && admin.email) {
+    emailPromises.push(
+      sendEmail({
+        to: admin.email,
+        subject: `New Digital Offline Demo Registration - ${registration.fullName}`,
+        html: adminHtml,
+      })
+    );
+  }
+
+  await Promise.all(emailPromises);
 };
 
 /**
@@ -1954,4 +2036,5 @@ module.exports = {
   sendJobApplicationEmail,
   sendFrenchCourseEmail,
   sendPyqsEmail,
+  sendDigitalOfflineDemoEmail,
 };

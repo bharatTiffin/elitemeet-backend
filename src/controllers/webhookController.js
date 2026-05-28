@@ -7,7 +7,7 @@ const User = require("../models/User");
 const MentorshipEnrollment = require("../models/MentorshipEnrollment");
 const MentorshipProgram = require("../models/MentorshipProgram");
 const PDFPurchase = require("../models/PDFPurchase");
-const { sendEmail, sendEmailWithPDF } = require("../utils/email");
+const { sendEmail, sendEmailWithPDF, sendDigitalOfflineDemoEmail } = require("../utils/email");
 const TypingPurchase = require("../models/TypingPurchase");
 const PolityPurchase = require("../models/PolityPurchase");
 const BookPurchase = require("../models/BookPurchase");
@@ -28,6 +28,7 @@ const PstetEnrollment = require("../models/PstetEnrollment");
 const ExciseInspectorEnrollment = require("../models/ExciseInspectorEnrollment");
 const JobApplication = require("../models/jobApplication");
 const FrenchCourse = require("../models/frenchCourse");
+const DigitalOfflineDemoRegistration = require("../models/DigitalOfflineDemoRegistration");
 
 // Get PDF links from ENV
 const getPDFLinks = () => ({
@@ -170,6 +171,11 @@ const handleRazorpayWebhook = async (req, res) => {
 
   if (orderDetails?.notes.purchaseType === "french_course") {
     await handleFrenchCoursePayment(paymentEntity, paymentEntity.id);
+    return res.json({ status: "ok" });
+  }
+
+  if (orderDetails?.notes.purchaseType === "digital_offline_registration") {
+    await handleDigitalOfflineDemoPayment(paymentEntity, paymentEntity.id);
     return res.json({ status: "ok" });
   }
 
@@ -2192,6 +2198,36 @@ async function handleFrenchCoursePayment(paymentEntity, paymentId) {
     console.log(`French course enrollment confirmed for ${enrollment.email}`);
   } catch (error) {
     console.error("Error handling French course payment:", error);
+    throw error;
+  }
+}
+
+// Handle Digital Offline Demo Registration Payment Success
+async function handleDigitalOfflineDemoPayment(paymentEntity, paymentId) {
+  try {
+    const orderId = paymentEntity.order_id;
+    const registration = await DigitalOfflineDemoRegistration.findOne({ razorpayOrderId: orderId });
+
+    if (!registration) {
+      console.error(`No digital offline demo registration found for order ID: ${orderId}`);
+      return;
+    }
+
+    if (registration.status === "confirmed") {
+      console.log(`Digital offline demo payment already processed for order ${orderId}`);
+      return;
+    }
+
+    registration.status = "confirmed";
+    registration.razorpayPaymentId = paymentId;
+    registration.expiresAt = null;
+    await registration.save();
+
+    await sendDigitalOfflineDemoEmail(registration, paymentId);
+
+    console.log(`Digital offline demo registration confirmed for ${registration.email}`);
+  } catch (error) {
+    console.error("Error handling digital offline demo payment:", error);
     throw error;
   }
 }
