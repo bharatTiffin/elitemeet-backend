@@ -31,9 +31,9 @@ exports.getInfo = (req, res) => {
       price: DIGITAL_OFFLINE_DEMO_PRICE,
       originalPrice: 1000,
       description:
-        "Registration open for 1, 2, 3 June demo classes. Choose Fatehgarh Sahib digital offline or Chandigarh offline coaching and attend in person.",
+        "Registration open for 1, 2 June demo classes. Choose Fatehgarh Sahib digital offline or Chandigarh offline coaching and attend in person.",
       highlights: [
-        "Registration open for 1, 2, 3 June",
+        "Registration open for 1, 2 June",
         "100% refundable on same-day request if you attend the demo",
         "Refund request must be made on the same day",
         "Demo fee will be adjusted in the final course fee if you join",
