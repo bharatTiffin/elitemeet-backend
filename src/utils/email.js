@@ -568,9 +568,9 @@ const sendCoachingEmail = async (enrollment, pdfLinks, paymentId) => {
               <br><br>
               <strong>Secure Your Access Now:</strong> Click the link below to join your fellow batchmates and stay updated:
               <br><br>
-              <a href="https://chat.whatsapp.com/JCC20uRItckAjwSy76IGiq" style="display: inline-block; background: #25d366; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 8px;">👉 Join the WhatsApp Broadcast Community Here</a>
+              <a href="https://chat.whatsapp.com/HohIDkP6D954EZSj0SInt5" style="display: inline-block; background: #25d366; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 8px;">👉 Join the WhatsApp Broadcast Community Here</a>
               <br><br>
-              https://chat.whatsapp.com/JCC20uRItckAjwSy76IGiq
+              https://chat.whatsapp.com/HohIDkP6D954EZSj0SInt5
               <br><br>
               <strong>Also join our Telegram channel:</strong><br>
               <a href="https://t.me/+5iOhJXmnnAFjOGM1" style="display: inline-block; background: #229ED9; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 8px;">👉 Join Telegram</a>
@@ -739,9 +739,9 @@ const sendCrashCourseEmail = async (enrollment, pdfLinks, paymentId) => {
               <br><br>
               <strong>Secure Your Access Now:</strong> Click the link below to join your fellow batchmates and stay updated:
               <br><br>
-              <a href="https://chat.whatsapp.com/JCC20uRItckAjwSy76IGiq" style="display: inline-block; background: #25d366; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 8px;">👉 Join the WhatsApp Broadcast Community Here</a>
+              <a href="https://chat.whatsapp.com/HohIDkP6D954EZSj0SInt5" style="display: inline-block; background: #25d366; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 8px;">👉 Join the WhatsApp Broadcast Community Here</a>
               <br><br>
-              https://chat.whatsapp.com/JCC20uRItckAjwSy76IGiq
+              https://chat.whatsapp.com/HohIDkP6D954EZSj0SInt5
             </p>
           </div>
 
