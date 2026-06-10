@@ -471,7 +471,7 @@ const sendDigitalOfflineDemoEmail = async (registration, paymentId) => {
 };
 
 /**
- * Sends 5-Month Online Coaching confirmation with Premium UI
+ * Sends Online Coaching confirmation with Premium UI
  */
 const sendCoachingEmail = async (enrollment, pdfLinks, paymentId) => {
   const adminEmail = process.env.ADMIN_EMAIL || "2025eliteacademy@gmail.com";
@@ -489,7 +489,7 @@ const sendCoachingEmail = async (enrollment, pdfLinks, paymentId) => {
     `;
   }).join('');
 
-  const html = `
+const html = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -500,11 +500,9 @@ const sendCoachingEmail = async (enrollment, pdfLinks, paymentId) => {
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
 
         <!-- ═══ BANNER ═══ -->
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 44px 24px 36px; text-align: center;">
-          <div style="font-size: 48px; margin-bottom: 12px;">🎓</div>
-          <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 30px; letter-spacing: -0.5px;">Enrollment Confirmed!</h1>
-          <p style="color: #ddd6fe; margin: 0 0 4px 0; font-size: 17px;">Welcome to the 5-Month Complete Coaching Program</p>
-          <p style="color: #c4b5fd; margin: 0; font-size: 14px;">Elite Academy &nbsp;·&nbsp; Your Success, Our Mission</p>
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 24px 24px 20px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0 0 4px 0; font-size: 24px; letter-spacing: -0.5px;">🎓 Enrollment Confirmed!</h1>
+          <p style="color: #ddd6fe; margin: 0; font-size: 14px;">Welcome to Elite Academy's 5-Month Complete Coaching Program &nbsp;·&nbsp; Your Success, Our Mission</p>
         </div>
 
         <div style="padding: 32px 28px;">
@@ -560,21 +558,31 @@ const sendCoachingEmail = async (enrollment, pdfLinks, paymentId) => {
               <div style="background: #9333ea; color: white; font-size: 15px; font-weight: 800; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 32px; text-align: center;">3</div>
               <div style="flex: 1;">
                 <h3 style="margin: 0 0 4px 0; color: #7e22ce; font-size: 17px;">Download the App — Recorded Lectures &amp; Tracker</h3>
-                <p style="margin: 0 0 14px 0; font-size: 14px; color: #6b21a8; line-height: 1.55;">
+                <p style="margin: 0 0 16px 0; font-size: 14px; color: #6b21a8; line-height: 1.55;">
                   Watch <strong>recorded video lectures</strong> and track your progress subject-wise, topic-wise, and by previous year questions — all inside the app.
                 </p>
 
-                <!-- App Buttons -->
-                <div style="margin-bottom: 18px;">
-                  <a href="https://play.google.com/store/apps/details?id=com.johnnykhore.eliteacademy&hl=en"
-                     style="display: inline-block; background: #34d399; color: white; padding: 10px 18px; text-decoration: none; border-radius: 8px; margin-right: 10px; font-size: 13px; font-weight: 700;">
-                    📱 Download on Play Store
-                  </a>
-                  <a href="https://apps.apple.com/in/app/elite-academy-mock-tests/id6746954938"
-                     style="display: inline-block; background: #60a5fa; color: white; padding: 10px 18px; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 700;">
-                    📱 Download on App Store
-                  </a>
-                </div>
+                <!-- App Store Buttons — Bold & Clickable -->
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 18px;">
+                  <tr>
+                    <td style="padding-right: 8px;">
+                      <a href="https://play.google.com/store/apps/details?id=com.johnnykhore.eliteacademy&hl=en"
+                         style="display: block; text-decoration: none; background: linear-gradient(135deg, #00b09b, #16a34a); border-radius: 10px; padding: 14px 10px; text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,0.15);">
+                        <div style="font-size: 22px; line-height: 1;">🤖</div>
+                        <div style="color: #d1fae5; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; margin-top: 4px; text-transform: uppercase;">Get it on</div>
+                        <div style="color: #ffffff; font-size: 16px; font-weight: 800; margin-top: 1px;">Google Play</div>
+                      </a>
+                    </td>
+                    <td style="padding-left: 8px;">
+                      <a href="https://apps.apple.com/in/app/elite-academy-mock-tests/id6746954938"
+                         style="display: block; text-decoration: none; background: linear-gradient(135deg, #434343, #000000); border-radius: 10px; padding: 14px 10px; text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,0.25);">
+                        <div style="font-size: 22px; line-height: 1;">🍎</div>
+                        <div style="color: #d1d5db; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; margin-top: 4px; text-transform: uppercase;">Download on the</div>
+                        <div style="color: #ffffff; font-size: 16px; font-weight: 800; margin-top: 1px;">App Store</div>
+                      </a>
+                    </td>
+                  </tr>
+                </table>
 
                 <!-- Login Credentials -->
                 <div style="background: white; border: 1px solid #e9d5ff; border-radius: 10px; padding: 16px;">
@@ -672,7 +680,7 @@ const sendCoachingEmail = async (enrollment, pdfLinks, paymentId) => {
   await transporter.sendMail({
     from: '"Elite Academy" <support@eliteacademy.pro>',
     to: enrollment.email,
-    subject: "🎉 Enrollment Confirmed — Welcome to the 5-Month Coaching Program",
+    subject: "🎉 Enrollment Confirmed — Welcome to Coaching Program",
     html: html
   });
 
