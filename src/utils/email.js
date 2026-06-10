@@ -498,93 +498,166 @@ const sendCoachingEmail = async (enrollment, pdfLinks, paymentId) => {
     </head>
     <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
       <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-        
-        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center;">
-          <h1 style="color: #ffffff; margin: 0; font-size: 28px;">🎓 Enrollment Confirmed!</h1>
-          <p style="color: #e0e7ff; margin: 10px 0 0 0; font-size: 16px;">Welcome to the 5-Month Complete Coaching Program</p>
+
+        <!-- ═══ BANNER ═══ -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 44px 24px 36px; text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 12px;">🎓</div>
+          <h1 style="color: #ffffff; margin: 0 0 8px 0; font-size: 30px; letter-spacing: -0.5px;">Enrollment Confirmed!</h1>
+          <p style="color: #ddd6fe; margin: 0 0 4px 0; font-size: 17px;">Welcome to the 5-Month Complete Coaching Program</p>
+          <p style="color: #c4b5fd; margin: 0; font-size: 14px;">Elite Academy &nbsp;·&nbsp; Your Success, Our Mission</p>
         </div>
 
-        <div style="padding: 30px;">
-          <p style="font-size: 16px; color: #374151;">Dear <strong>${enrollment.fullName}</strong>,</p>
-          <p style="font-size: 16px; color: #374151; line-height: 1.6;">
-            Congratulations! Your payment for the 5-Month Complete Online Coaching has been confirmed. You are now a part of Elite Academy's most comprehensive preparation program.
+        <div style="padding: 32px 28px;">
+
+          <p style="font-size: 16px; color: #374151; margin: 0 0 6px 0;">Dear <strong>${enrollment.fullName}</strong>,</p>
+          <p style="font-size: 15px; color: #6b7280; line-height: 1.6; margin: 0 0 28px 0;">
+            Congratulations! Your payment is confirmed and you are now officially part of Elite Academy's most comprehensive preparation program. Follow the steps below to get started immediately.
           </p>
 
-          <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin: 24px 0;">
-             <p style="margin: 10px 0 5px 0; font-size: 14px; color: #78350f; line-height: 1.5;">
-               <strong>Important:</strong> Only this email (<strong>${enrollment.email}</strong>) is authorized to access the lectures and tracker. 
-               If you already have an account with this email, your coaching access will be added to it automatically on the start date.
-             </p>
-          </div>
-
-          <div style="background: linear-gradient(135deg, #667eea10 0%, #764ba210 100%); border-radius: 12px; padding: 24px; margin: 24px 0; border: 2px solid #667eea;">
-            <h2 style="color: #667eea; margin-top: 0; font-size: 18px;">🔐 Your Login Credentials</h2>
-            <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #e5e7eb;">
-               <p style="margin: 8px 0; font-size: 14px; color: #6b7280;"><strong>Email:</strong> <span style="color: #111827;">${enrollment.email}</span></p>
-               <p style="margin: 8px 0; font-size: 14px; color: #6b7280;"><strong>Password:</strong> <span style="color: #111827; font-family: monospace; background: #f3f4f6; padding: 2px 6px; border-radius: 4px;">${enrollment.appPassword}</span></p>
+          <!-- ═══ STEP 1 — WHATSAPP ═══ -->
+          <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 22px 20px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: flex-start; gap: 14px;">
+              <div style="background: #22c55e; color: white; font-size: 15px; font-weight: 800; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 32px; text-align: center;">1</div>
+              <div style="flex: 1;">
+                <h3 style="margin: 0 0 4px 0; color: #15803d; font-size: 17px;">Join WhatsApp Community — Live Classes</h3>
+                <p style="margin: 0 0 14px 0; font-size: 14px; color: #166534; line-height: 1.55;">
+                  All <strong>live class links</strong> are shared exclusively on this WhatsApp Community. You will miss your live lectures if you are not in the group — join right now.
+                </p>
+                <a href="https://chat.whatsapp.com/HohIDkP6D954EZSj0SInt5"
+                   style="display: inline-block; background: #25d366; color: white; padding: 11px 22px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 14px;">
+                  📲 Join WhatsApp Community
+                </a>
+                <p style="margin: 10px 0 0 0; font-size: 11px; color: #6b7280;">
+                  Direct link: https://chat.whatsapp.com/HohIDkP6D954EZSj0SInt5
+                </p>
+              </div>
             </div>
-            <p style="font-size: 13px; color: #4b5563; margin-top: 15px; line-height: 1.4;">
-              🌐 <strong>Web Portal:</strong> Visit <a href="https://eliteacademy.pro" style="color: #667eea; font-weight: bold;">eliteacademy.pro</a> and login with these details to watch lectures on your laptop/PC.
-            </p>
           </div>
 
-          <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 20px; margin: 24px 0;">
-            <h3 style="margin-top: 0; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">📚 8 Bonus Books (Included with Coaching)</h3>
-            <p style="font-size: 14px; color: #475569; margin-bottom: 15px;">Get a head start on your prep with immediate access to our library:</p>
-            ${booksHtml}
+          <!-- ═══ STEP 2 — TELEGRAM ═══ -->
+          <div style="background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 12px; padding: 22px 20px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: flex-start; gap: 14px;">
+              <div style="background: #229ED9; color: white; font-size: 15px; font-weight: 800; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 32px; text-align: center;">2</div>
+              <div style="flex: 1;">
+                <h3 style="margin: 0 0 4px 0; color: #1d4ed8; font-size: 17px;">Join Telegram Channel — Notes &amp; Study Material</h3>
+                <p style="margin: 0 0 14px 0; font-size: 14px; color: #1e40af; line-height: 1.55;">
+                  All <strong>notes, PDFs, and study material</strong> are posted on our Telegram channel. Join to get instant access as soon as new material is released.
+                </p>
+                <a href="https://t.me/+5iOhJXmnnAFjOGM1"
+                   style="display: inline-block; background: #229ED9; color: white; padding: 11px 22px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 14px;">
+                  ✈️ Join Telegram Channel
+                </a>
+                <p style="margin: 10px 0 0 0; font-size: 11px; color: #6b7280;">
+                  Direct link: https://t.me/+5iOhJXmnnAFjOGM1
+                </p>
+              </div>
+            </div>
           </div>
 
-          <h3 style="color: #111827; font-size: 18px;">📱 Download the App</h3>
-          <p style="color: #374151; font-size: 14px;">Stay updated and track your progress on our official app:</p>
-          <div style="margin: 20px 0;">
-            <a href="https://play.google.com/store/apps/details?id=com.johnnykhore.eliteacademy&hl=en" style="display: inline-block; background: #34d399; color: white; padding: 12px 20px; text-decoration: none; border-radius: 6px; margin-right: 10px; font-size: 13px; font-weight: bold;">📱 Play Store</a>
-            <a href="https://apps.apple.com/in/app/elite-academy-mock-tests/id6746954938" style="display: inline-block; background: #60a5fa; color: white; padding: 12px 20px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: bold;">📱 App Store</a>
+          <!-- ═══ STEP 3 — MOBILE APP ═══ -->
+          <div style="background: #fdf4ff; border: 1.5px solid #d8b4fe; border-radius: 12px; padding: 22px 20px; margin-bottom: 28px;">
+            <div style="display: flex; align-items: flex-start; gap: 14px;">
+              <div style="background: #9333ea; color: white; font-size: 15px; font-weight: 800; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 32px; text-align: center;">3</div>
+              <div style="flex: 1;">
+                <h3 style="margin: 0 0 4px 0; color: #7e22ce; font-size: 17px;">Download the App — Recorded Lectures &amp; Tracker</h3>
+                <p style="margin: 0 0 14px 0; font-size: 14px; color: #6b21a8; line-height: 1.55;">
+                  Watch <strong>recorded video lectures</strong> and track your progress subject-wise, topic-wise, and by previous year questions — all inside the app.
+                </p>
+
+                <!-- App Buttons -->
+                <div style="margin-bottom: 18px;">
+                  <a href="https://play.google.com/store/apps/details?id=com.johnnykhore.eliteacademy&hl=en"
+                     style="display: inline-block; background: #34d399; color: white; padding: 10px 18px; text-decoration: none; border-radius: 8px; margin-right: 10px; font-size: 13px; font-weight: 700;">
+                    📱 Download on Play Store
+                  </a>
+                  <a href="https://apps.apple.com/in/app/elite-academy-mock-tests/id6746954938"
+                     style="display: inline-block; background: #60a5fa; color: white; padding: 10px 18px; text-decoration: none; border-radius: 8px; font-size: 13px; font-weight: 700;">
+                    📱 Download on App Store
+                  </a>
+                </div>
+
+                <!-- Login Credentials -->
+                <div style="background: white; border: 1px solid #e9d5ff; border-radius: 10px; padding: 16px;">
+                  <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: 700; color: #7e22ce; text-transform: uppercase; letter-spacing: 0.5px;">🔐 Your Login Credentials</p>
+                  <p style="margin: 0 0 6px 0; font-size: 14px; color: #374151;"><strong>Email:</strong> &nbsp;<span style="color: #111827;">${enrollment.email}</span></p>
+                  <p style="margin: 0 0 12px 0; font-size: 14px; color: #374151;"><strong>Password:</strong> &nbsp;<span style="color: #111827; font-family: monospace; background: #f3f4f6; padding: 3px 8px; border-radius: 4px;">${enrollment.appPassword}</span></p>
+                  <div style="background: #fef9c3; border: 1px solid #fde047; border-radius: 6px; padding: 10px 12px; margin-bottom: 10px;">
+                    <p style="margin: 0; font-size: 12px; color: #713f12; line-height: 1.5;">
+                      ⚠️ <strong>Important:</strong> Only <strong>${enrollment.email}</strong> is authorized to access lectures and the tracker. If you already have an account with this email, coaching access will be added automatically on the start date.
+                    </p>
+                  </div>
+                  <p style="margin: 0; font-size: 12px; color: #6b7280; line-height: 1.5;">
+                    Can't log in? Use <strong>Forgot Password</strong> on the app, or call us at <strong>7696954686</strong>.
+                  </p>
+                </div>
+
+                <!-- Website Access -->
+                <div style="margin-top: 14px; background: white; border: 1px solid #e9d5ff; border-radius: 10px; padding: 14px 16px;">
+                  <p style="margin: 0 0 4px 0; font-size: 13px; font-weight: 700; color: #7e22ce;">🌐 Web Access — Recorded Lectures on Laptop/PC</p>
+                  <p style="margin: 0; font-size: 13px; color: #374151; line-height: 1.5;">
+                    Visit <a href="https://eliteacademy.pro" style="color: #667eea; font-weight: 700;">eliteacademy.pro</a> and log in with the same email &amp; password above to watch recorded lectures on your browser.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin: 24px 0;">
-            <h3 style="color: #111827; margin-top: 0; font-size: 18px;">📋 Enrollment Profile</h3>
+          <!-- ═══ ENROLLMENT PROFILE ═══ -->
+          <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 22px 20px; margin-bottom: 16px;">
+            <h3 style="color: #111827; margin: 0 0 16px 0; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px;">📋 Enrollment Profile</h3>
             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-              <tr style="border-bottom: 1px solid #e5e7eb;"><td style="padding: 10px 0; color: #6b7280;">Father's Name</td><td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">${enrollment.fatherName}</td></tr>
-              <tr style="border-bottom: 1px solid #e5e7eb;"><td style="padding: 10px 0; color: #6b7280;">Mobile Number</td><td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">${enrollment.mobile}</td></tr>
-              <tr style="border-bottom: 1px solid #e5e7eb;"><td style="padding: 10px 0; color: #6b7280;">Course Duration</td><td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">5 Months</td></tr>
-              <tr style="border-bottom: 1px solid #e5e7eb;"><td style="padding: 10px 0; color: #6b7280;">Amount Paid</td><td style="padding: 10px 0; color: #059669; text-align: right; font-weight: 600;">₹${enrollment.amount}</td></tr>
-              <tr><td style="padding: 10px 0; color: #6b7280;">Payment ID</td><td style="padding: 10px 0; color: #111827; text-align: right; font-size: 11px; font-family: monospace;">${paymentId}</td></tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 0; color: #6b7280;">Full Name</td>
+                <td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">${enrollment.fullName}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 0; color: #6b7280;">Father's Name</td>
+                <td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">${enrollment.fatherName}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 0; color: #6b7280;">Mobile Number</td>
+                <td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">${enrollment.mobile}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 0; color: #6b7280;">Course Duration</td>
+                <td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">5 Months</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 0; color: #6b7280;">Amount Paid</td>
+                <td style="padding: 10px 0; color: #059669; text-align: right; font-weight: 700; font-size: 15px;">₹${enrollment.amount}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; color: #6b7280;">Payment ID</td>
+                <td style="padding: 10px 0; color: #111827; text-align: right; font-size: 11px; font-family: monospace;">${paymentId}</td>
+              </tr>
             </table>
           </div>
 
-          <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 20px;">
-            <h3 style="color: #111827; font-size: 16px;">🏢 Visit Our Institute</h3>
-            <p style="font-size: 13px; color: #475569; line-height: 1.5;">
+          <!-- ═══ VISIT OUR INSTITUTE ═══ -->
+          <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px 20px; margin-bottom: 28px;">
+            <h3 style="color: #111827; margin: 0 0 8px 0; font-size: 15px;">🏢 Visit Our Institute</h3>
+            <p style="font-size: 13px; color: #475569; line-height: 1.7; margin: 0;">
               <strong>Elite Academy</strong><br>
-              <a href="https://maps.app.goo.gl/4h3PjhtJYke4EaN46" style="color: #667eea; text-decoration: underline;">SCO-144 Sector 24D Chandigarh</a><br>
+              <a href="https://maps.app.goo.gl/4h3PjhtJYke4EaN46" style="color: #667eea; text-decoration: underline;">SCO-144 Sector 24D, Chandigarh</a><br>
               <strong>Contact:</strong> 7696954686
             </p>
           </div>
 
-          <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 6px; margin: 24px 0;">
-            <p style="color: #1e40af; margin: 0; font-size: 14px; text-align: center;">
-              <strong>📢 Action Required: Join Your Batch Group</strong><br>
-              Since you are an enrolled student, this WhatsApp Community is your direct lifeline to the academy for all daily operations and lecture timings.
-              <br><br>
-              <strong>Secure Your Access Now:</strong> Click the link below to join your fellow batchmates and stay updated:
-              <br><br>
-              <a href="https://chat.whatsapp.com/HohIDkP6D954EZSj0SInt5" style="display: inline-block; background: #25d366; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 8px;">👉 Join the WhatsApp Broadcast Community Here</a>
-              <br><br>
-              https://chat.whatsapp.com/HohIDkP6D954EZSj0SInt5
-              <br><br>
-              <strong>Also join our Telegram channel:</strong><br>
-              <a href="https://t.me/+5iOhJXmnnAFjOGM1" style="display: inline-block; background: #229ED9; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 8px;">👉 Join Telegram</a>
-              <br><br>
-              https://t.me/+5iOhJXmnnAFjOGM1
-            </p>
+          <!-- ═══ 8 BONUS BOOKS ═══ -->
+          <div style="background: #fffbeb; border: 1.5px solid #fcd34d; border-radius: 12px; padding: 22px 20px; margin-bottom: 28px;">
+            <h3 style="margin: 0 0 4px 0; color: #92400e; font-size: 17px;">🎁 8 Bonus Books — Included with Your Coaching</h3>
+            <p style="font-size: 13px; color: #78350f; margin: 0 0 16px 0;">Get a head start right now — download all 8 books immediately:</p>
+            ${booksHtml}
           </div>
 
-          <p style="font-size: 15px; color: #374151; margin-top: 30px;">
+          <p style="font-size: 15px; color: #374151; margin: 0;">
             Best regards,<br>
             <strong>Elite Academy Team</strong>
           </p>
+
         </div>
 
+        <!-- ═══ FOOTER ═══ -->
         <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
           <p style="color: #6b7280; font-size: 11px; margin: 5px 0;">© 2026 Elite Academy. All rights reserved.</p>
           <p style="color: #6b7280; font-size: 11px; margin: 5px 0;">Your Success, Our Mission 🎓</p>
@@ -599,7 +672,7 @@ const sendCoachingEmail = async (enrollment, pdfLinks, paymentId) => {
   await transporter.sendMail({
     from: '"Elite Academy" <support@eliteacademy.pro>',
     to: enrollment.email,
-    subject: "🎉 Enrollment Successful - Welcome to 5-Month Coaching",
+    subject: "🎉 Enrollment Confirmed — Welcome to the 5-Month Coaching Program",
     html: html
   });
 
