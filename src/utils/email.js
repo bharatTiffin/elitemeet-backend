@@ -2020,6 +2020,82 @@ const sendPyqsEmail = async (purchase, paymentId) => {
   }
 };
 
+/**
+ * Sends payment reminder email for pending payments
+ */
+const sendPaymentReminderEmail = async (enrollment) => {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+        
+        <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 40px 20px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 28px;">⚠️ Payment Reminder</h1>
+          <p style="color: #fef3c7; margin: 10px 0 0 0; font-size: 16px;">Elite Academy - Pending Payment</p>
+        </div>
+
+        <div style="padding: 30px;">
+          <p style="font-size: 16px; color: #374151;">Dear <strong>${enrollment.fullName}</strong>,</p>
+          <p style="font-size: 16px; color: #374151; line-height: 1.6;">
+            This is a friendly reminder that you have a pending payment for your coaching enrollment.
+          </p>
+
+          <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin: 24px 0;">
+            <p style="margin: 10px 0 5px 0; font-size: 14px; color: #78350f; line-height: 1.5;">
+              <strong>Pending Amount:</strong> ₹${enrollment.pendingPaymentAmount}
+            </p>
+            <p style="margin: 5px 0; font-size: 14px; color: #78350f; line-height: 1.5;">
+              <strong>Due Date:</strong> ${new Date(enrollment.paymentExpiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+          </div>
+
+          <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 16px; border-radius: 8px; margin: 24px 0;">
+            <p style="margin: 0; font-size: 15px; color: #991b1b; line-height: 1.6;">
+              <strong>📞 Action Required:</strong> Your coaching payment is pending. Kindly call <strong>7696954686</strong> to complete your payment and avoid any disruption in your access.
+            </p>
+          </div>
+
+          <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin: 24px 0;">
+            <h3 style="color: #111827; margin-top: 0; font-size: 18px;">📋 Enrollment Details</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr style="border-bottom: 1px solid #e5e7eb;"><td style="padding: 10px 0; color: #6b7280;">Name</td><td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">${enrollment.fullName}</td></tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;"><td style="padding: 10px 0; color: #6b7280;">Email</td><td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">${enrollment.email}</td></tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;"><td style="padding: 10px 0; color: #6b7280;">Mobile</td><td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">${enrollment.mobile}</td></tr>
+              <tr><td style="padding: 10px 0; color: #6b7280;">Amount Paid</td><td style="padding: 10px 0; color: #059669; text-align: right; font-weight: 600;">₹${enrollment.amount}</td></tr>
+            </table>
+          </div>
+
+          <p style="font-size: 15px; color: #374151; margin-top: 30px;">
+            Best regards,<br>
+            <strong>Elite Academy Team</strong>
+          </p>
+        </div>
+
+        <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+          <p style="color: #6b7280; font-size: 11px; margin: 5px 0;">© 2026 Elite Academy. All rights reserved.</p>
+          <p style="color: #6b7280; font-size: 11px; margin: 5px 0;">Your Success, Our Mission 🎓</p>
+        </div>
+
+      </div>
+    </body>
+    </html>
+  `;
+
+  await transporter.sendMail({
+    from: '"Elite Academy" <support@eliteacademy.pro>',
+    to: enrollment.email,
+    subject: "⚠️ Payment Reminder - Elite Academy",
+    html: html
+  });
+
+  console.log(`Payment reminder email sent to ${enrollment.email}`);
+};
+
 // CORRECT EXPORT
 module.exports = {
   sendEmail,
@@ -2037,4 +2113,5 @@ module.exports = {
   sendFrenchCourseEmail,
   sendPyqsEmail,
   sendDigitalOfflineDemoEmail,
+  sendPaymentReminderEmail,
 };

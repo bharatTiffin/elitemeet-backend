@@ -6,7 +6,7 @@ const User = require("../models/User");
 const Razorpay = require("razorpay");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const {sendCoachingEmail,sendCrashCourseEmail} = require("../utils/email");
+const {sendCoachingEmail,sendCrashCourseEmail,sendPaymentReminderEmail} = require("../utils/email");
 
 const getPDFLinks = () => ({
   'polity': process.env.POLITY_PDF_LINK,
@@ -186,7 +186,7 @@ exports.checkCrashCourseAccess = async (req, res) => {
 
 exports.adminAddEnrollment = async (req, res) => {
   try {
-    const { fullName, fatherName, mobile, password, email, amount, sendEmail, type = "student" } = req.body;
+    const { fullName, fatherName, mobile, password, email, amount, sendEmail, type = "student", paymentType = "full", pendingPaymentAmount, paymentExpiryDate } = req.body;
 
     console.log(" Admin adding enrollment for:", email);
 
@@ -217,6 +217,20 @@ exports.adminAddEnrollment = async (req, res) => {
       return res.status(400).json({ 
         message: "Password must be at least 6 characters" 
       });
+    }
+
+    // Partial payment validation
+    if (paymentType === "partial") {
+      if (!pendingPaymentAmount || pendingPaymentAmount <= 0) {
+        return res.status(400).json({ 
+          message: "Pending payment amount is required for partial payment" 
+        });
+      }
+      if (!paymentExpiryDate) {
+        return res.status(400).json({ 
+          message: "Payment expiry date is required for partial payment" 
+        });
+      }
     }
 
     // Check if user already has confirmed enrollment
@@ -270,7 +284,10 @@ exports.adminAddEnrollment = async (req, res) => {
       enrollmentMode: "admin",
       addedByAdmin: req.user.email,
       type: type || "student",
-      expiresAt: null
+      expiresAt: null,
+      paymentType: paymentType || "full",
+      pendingPaymentAmount: paymentType === "partial" ? pendingPaymentAmount : undefined,
+      paymentExpiryDate: paymentType === "partial" ? new Date(paymentExpiryDate) : undefined
     });
 
     await newEnrollment.save();
@@ -854,6 +871,91 @@ exports.adminsectionalTestAddEnrollment = async (req, res) => {
       success: false,
       message: "Error adding enrollment",
       error: error.message,
+    });
+  }
+};
+
+// Get students with pending payments
+exports.getPendingPayments = async (req, res) => {
+  try {
+    const pendingStudents = await CoachingEnrollment.find({
+      paymentType: "partial",
+      status: { $in: ["confirmed", "fee_pending"] }
+    }).sort({ paymentExpiryDate: 1 });
+
+    res.status(200).json({
+      success: true,
+      students: pendingStudents
+    });
+  } catch (error) {
+    console.error("Error fetching pending payments:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching pending payments",
+      error: error.message
+    });
+  }
+};
+
+// Suspend student (change status to fee_pending)
+exports.suspendStudent = async (req, res) => {
+  try {
+    const { enrollmentId } = req.params;
+
+    const enrollment = await CoachingEnrollment.findByIdAndUpdate(
+      enrollmentId,
+      { status: "fee_pending" },
+      { new: true }
+    );
+
+    if (!enrollment) {
+      return res.status(404).json({
+        success: false,
+        message: "Enrollment not found"
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Student suspended successfully",
+      enrollment
+    });
+  } catch (error) {
+    console.error("Error suspending student:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error suspending student",
+      error: error.message
+    });
+  }
+};
+
+// Send payment reminder email
+exports.sendPaymentReminder = async (req, res) => {
+  try {
+    const { enrollmentId } = req.params;
+
+    const enrollment = await CoachingEnrollment.findById(enrollmentId);
+
+    if (!enrollment) {
+      return res.status(404).json({
+        success: false,
+        message: "Enrollment not found"
+      });
+    }
+
+    await sendPaymentReminderEmail(enrollment);
+
+    res.status(200).json({
+      success: true,
+      message: "Payment reminder email sent successfully"
+    });
+  } catch (error) {
+    console.error("Error sending payment reminder:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error sending payment reminder",
+      error: error.message
     });
   }
 };

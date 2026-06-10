@@ -12,7 +12,7 @@ const coachingEnrollmentSchema = new mongoose.Schema(
     appPassword: { type: String, required: true }, 
     status: {
       type: String,
-      enum: ["pending", "confirmed", "cancelled"],
+      enum: ["pending", "confirmed", "cancelled", "fee_pending"],
       default: "pending",
       index: true,
     },
@@ -27,6 +27,13 @@ const coachingEnrollmentSchema = new mongoose.Schema(
       index: true,
     },
     amount: { type: Number, required: true },
+    paymentType: {
+      type: String,
+      enum: ["full", "partial"],
+      default: "full",
+    },
+    pendingPaymentAmount: { type: Number, required: false },
+    paymentExpiryDate: { type: Date, required: false },
     razorpayOrderId: { type: String, required: true, unique: true },
     razorpayPaymentId: { type: String },
     expiresAt: {
