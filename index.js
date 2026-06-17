@@ -28,6 +28,7 @@ app.use(cors({
     'https://elitemeet-frontend.vercel.app',
     'https://elite-academy-backend-proxy.vercel.app',
     'https://elite-academy-production.up.railway.app',
+    'https://elitemeet-backend-dev.vercel.app',
     /\.vercel\.app$/
   ],
   credentials: true,
