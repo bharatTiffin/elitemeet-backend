@@ -7,6 +7,8 @@
     "dev": "nodemon index.js",
     "start": "node index.js",
     "fix-indexes": "node scripts/fixIndexes.js",
+    "seed-batch": "node scripts/seedBatch.js",
+    "seed-data": "node scripts/seedData.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

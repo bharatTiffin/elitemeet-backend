@@ -67,6 +67,7 @@ app.use("/api/admin/monthly-current-affairs", require("./src/routes/adminMonthly
 app.use("/api/coaching", require("./src/routes/coachingRoutes")); 
 app.use("/api/videocoaching", require("./src/routes/videocoachingRoutes"));
 app.use("/api/videocrashcoaching", require("./src/routes/videocrashcoachingRoutes"));
+app.use("/api/batches", require("./src/routes/batchRoutes"));
 app.use("/api/crashcourse", require("./src/routes/crashcourseRoutes.js"));
 app.use("/api/job", require("./src/routes/jobRoutes.js"));
 app.use("/api/french-course", require("./src/routes/frenchCourseRoutes.js"));
