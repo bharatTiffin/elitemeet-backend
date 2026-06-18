@@ -153,7 +153,7 @@ const checkTypingAccess = async (req, res, next) => {
       // console.log("user.firebaseUid: ",user?.firebaseUid)
   
       const purchase = await TypingPurchase.findOne({
-        email: user.email, // ✅ FIXED
+        userEmail: user.email, // ✅ FIXED
         status: "confirmed",
       });
       console.log("purchase: ",purchase);
