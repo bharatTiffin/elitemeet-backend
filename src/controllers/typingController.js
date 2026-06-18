@@ -140,17 +140,24 @@ const getMyTypingPurchases = async (req, res, next) => {
 const checkTypingAccess = async (req, res, next) => {
     try {
       const user = req.user;
+      console.log("req: ",req);
+      console.log("req.user: ",req.user);
+      console.log("user:",user);
+
       if (!user) {
         return res.status(401).json({ error: "User not authenticated" });
       }
   
       // ✅ FIX: Use user.id instead of user.firebaseUid
       const userFirebaseUid = user.id || user.firebaseUid;
+      console.log("user.id",user?.id);
+      console.log("user.firebaseUid: ",user?.firebaseUid)
   
       const purchase = await TypingPurchase.findOne({
         userFirebaseUid: userFirebaseUid, // ✅ FIXED
         status: "confirmed",
       });
+      console.log("purchase: ",purchase);
   
       if (purchase) {
         return res.json({
