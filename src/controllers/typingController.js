@@ -148,12 +148,12 @@ const checkTypingAccess = async (req, res, next) => {
       }
   
       // ✅ FIX: Use user.id instead of user.firebaseUid
-      const userFirebaseUid = user.id || user.firebaseUid;
-      console.log("user.id",user?.id);
-      console.log("user.firebaseUid: ",user?.firebaseUid)
+      // const userFirebaseUid = user.id || user.firebaseUid || user.email;
+      // console.log("user.id",user?.id);
+      // console.log("user.firebaseUid: ",user?.firebaseUid)
   
       const purchase = await TypingPurchase.findOne({
-        email: email, // ✅ FIXED
+        email: user.email, // ✅ FIXED
         status: "confirmed",
       });
       console.log("purchase: ",purchase);
