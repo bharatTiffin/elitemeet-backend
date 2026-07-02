@@ -175,8 +175,9 @@ exports.autoCreateDailySlot = async (req, res) => {
     // Calculate next day's 9pm time
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(21, 0, 0, 0); // 9:00 PM
-
+    // tomorrow.setHours(21, 0, 0, 0); // 9:00 PM
+    tomorrow.setHours(15, 30, 0, 0);
+    
     const endTime = new Date(tomorrow);
     endTime.setMinutes(endTime.getMinutes() + 30); // 30 minutes duration
 
