@@ -80,20 +80,37 @@ exports.createOrder = async (req, res) => {
 /* ==========================================================================
    ADMIN DASHBOARD CRUD OPERATIONS
    ========================================================================== */
-
+const access = (req) => {
+  return (req.user && req.user.role === "admin");
+};
 // Fetch all orders for dashboard view
 exports.getAllOrders = async (req, res) => {
   try {
-    const orders = await PlannerPurchase.find().sort({ createdAt: -1 });
-    res.status(200).json({ success: true, orders });
+    // Restrict to admins if needed
+    if (!access(req)) return res.status(403).json({ success: false, message: "Unauthorized dashboard access" });
+    // if (req.user && req.user.role !== "admin") {
+    //   return res.status(403).json({ success: false, message: "Unauthorized dashboard access" });
+    // }
+
+    // Fetch all orders from database, sorting by most recent first
+    const orders = await PlannerPurchase.find({}).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      orders
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Failed to grab dashboard orders" });
+    console.error("Error fetching admin orders:", error);
+    res.status(500).json({ success: false, message: "Failed to retrieve orders ledger" });
   }
 };
 
 // Create a Manual Generation Order (Offline Cash / Direct Bank Transfer)
 exports.createManualOrder = async (req, res) => {
   try {
+    if (!access(req)) return res.status(403).json({ success: false, message: "Unauthorized dashboard access" });
+
     const { fullName, email, phone, medium, purchaseType, amount, ...address } = req.body;
 
     const newOrder = new PlannerPurchase({
@@ -120,8 +137,31 @@ exports.createManualOrder = async (req, res) => {
 };
 
 // Add / Send Tracking details to user
+// exports.sendTrackerId = async (req, res) => {
+//   try {
+    // if(!access(req)) return res.status(403).json({ success: false, message: "Unauthorized dashboard access" });
+
+//     const { orderId } = req.params;
+//     const { trackerId } = req.body;
+
+//     const order = await PlannerPurchase.findById(orderId);
+//     if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+//     order.trackerId = trackerId;
+//     await order.save();
+
+//     await sendTrackingEmail(order, trackerId);
+
+//     res.status(200).json({ success: true, message: "Tracker email successfully dispatched to student!", order });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: "Tracking dispatch workflow failed" });
+//   }
+// };
+
+// Add / Send Tracking details to user
 exports.sendTrackerId = async (req, res) => {
   try {
+    if (!access(req)) return res.status(403).json({ success: false, message: "Unauthorized dashboard access" });
     const { orderId } = req.params;
     const { trackerId } = req.body;
 
@@ -129,12 +169,20 @@ exports.sendTrackerId = async (req, res) => {
     if (!order) return res.status(404).json({ success: false, message: "Order not found" });
 
     order.trackerId = trackerId;
+    
+    // Automatically switch status to "confirmed" if it was pending since it's now packed/shipped
+    if (order.status === "pending") {
+      order.status = "confirmed";
+    }
+    
     await order.save();
 
+    // Sends the email via your utils/email.js configuration
     await sendTrackingEmail(order, trackerId);
 
     res.status(200).json({ success: true, message: "Tracker email successfully dispatched to student!", order });
   } catch (error) {
+    console.error("Error sending tracker ID:", error);
     res.status(500).json({ success: false, message: "Tracking dispatch workflow failed" });
   }
 };
@@ -142,6 +190,8 @@ exports.sendTrackerId = async (req, res) => {
 // Complete fulfillment route: Mark order as Sent / Delivered
 exports.markDelivered = async (req, res) => {
   try {
+    if (!access(req)) return res.status(403).json({ success: false, message: "Unauthorized dashboard access" });
+
     const { orderId } = req.params;
     const order = await PlannerPurchase.findByIdAndUpdate(orderId, { status: "delivered" }, { new: true });
     
@@ -149,5 +199,20 @@ exports.markDelivered = async (req, res) => {
     res.status(200).json({ success: true, message: "Status marked to Delivered!", order });
   } catch (error) {
     res.status(500).json({ success: false, message: "Delivery updates failed" });
+  }
+};
+
+// Cancel order route
+exports.cancelOrder = async (req, res) => {
+  try {
+    if (!access(req)) return res.status(403).json({ success: false, message: "Unauthorized dashboard access" });
+
+    const { orderId } = req.params;
+    const order = await PlannerPurchase.findByIdAndUpdate(orderId, { status: "cancelled" }, { new: true });
+    
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+    res.status(200).json({ success: true, message: "Order marked as Cancelled!", order });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Cancellation failed" });
   }
 };
