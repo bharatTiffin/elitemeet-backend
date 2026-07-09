@@ -79,6 +79,7 @@ app.use("/api/pstet", require("./src/routes/pstetRoutes.js"));
 app.use("/api/excise-inspector", require("./src/routes/exciseInspectorRoutes.js"));
 app.use("/api/admin", require("./src/routes/adminRoutes")); 
 app.use("/api/inquiry", require("./src/routes/inquiryRoutes"));
+app.use("/api/planner-book", require("./src/routes/plannerBookRoutes"));
 
 // Error handling
 app.use((err, req, res, next) => {

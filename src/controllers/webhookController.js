@@ -29,6 +29,8 @@ const ExciseInspectorEnrollment = require("../models/ExciseInspectorEnrollment")
 const JobApplication = require("../models/jobApplication");
 const FrenchCourse = require("../models/frenchCourse");
 const DigitalOfflineDemoRegistration = require("../models/DigitalOfflineDemoRegistration");
+const PlannerPurchase = require("../models/PlannerPurchase");
+const { sendPlannerSoftcopyEmail, sendPlannerHardcopyEmail } = require("../utils/email");
 
 // Get PDF links from ENV
 const getPDFLinks = () => ({
@@ -154,6 +156,15 @@ const handleRazorpayWebhook = async (req, res) => {
 
   if (orderDetails?.notes.purchaseType === "sectional-testseries-online" || orderDetails?.notes.purchaseType === "sectional-testseries-offline") {
     await handleSectionalTestSeriesPayment(paymentEntity, paymentEntity.id);
+  }
+
+  // Inside handleRazorpayWebhook -> after verifying the signature and checking if event === "payment.captured"
+  const isPlannerPurchase = orderDetails?.notes?.purchaseType === "planner" || 
+                           (await PlannerPurchase.findOne({ razorpayOrderId: orderId }));
+
+  if (isPlannerPurchase || orderDetails?.notes?.purchaseType === "hardcopy" || orderDetails?.notes?.purchaseType === "softcopy") {
+    await handlePlannerPayment(event.payload.payment.entity, paymentId);
+    return res.json({ status: "ok" });
   }
 
   if (orderDetails?.notes.purchaseType === "pstet_ctet") {
@@ -2264,6 +2275,41 @@ async function handlePyqsPayment(paymentEntity, paymentId) {
     console.log(`✅ PYQS purchase confirmed for ${purchase.email}`);
   } catch (error) {
     console.error('Error handling PYQS payment:', error);
+    throw error;
+  }
+}
+
+async function handlePlannerPayment(paymentEntity, paymentId) {
+  try {
+    const orderId = paymentEntity.order_id;
+    const purchase = await PlannerPurchase.findOne({ razorpayOrderId: orderId });
+
+    if (!purchase) {
+      console.warn("Planner purchase record not found for order:", orderId);
+      return;
+    }
+
+    if (purchase.status === "confirmed") {
+      console.log("Planner purchase already processed & confirmed:", purchase._id);
+      return;
+    }
+
+    // Mark as paid
+    purchase.status = "confirmed";
+    purchase.razorpayPaymentId = paymentId;
+    purchase.expiresAt = null; // Remove the expiration timer
+    await purchase.save();
+
+    // Differentiate workflows depending on purchase type
+    if (purchase.purchaseType === "softcopy") {
+      await sendPlannerSoftcopyEmail(purchase, paymentId);
+      console.log(`📧 Digital Planner Email dispatched to ${purchase.email}`);
+    } else if (purchase.purchaseType === "hardcopy") {
+      await sendPlannerHardcopyEmail(purchase, paymentId);
+      console.log(`📦 Hardcopy Tracking/Order Confirmation Email dispatched to ${purchase.email}`);
+    }
+  } catch (error) {
+    console.error("Critical failure during handling planner webhook payment:", error);
     throw error;
   }
 }

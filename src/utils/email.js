@@ -2177,6 +2177,100 @@ const sendPaymentReminderEmail = async (enrollment) => {
   console.log(`Payment reminder email sent to ${enrollment.email}`);
 };
 
+/**
+ * Professional Softcopy Delivery Email
+ */
+const sendPlannerSoftcopyEmail = async (purchase, paymentId) => {
+  const admin = await User.findOne({ role: 'admin' });
+  console.log("Admin email for planner softcopy:", admin ? admin.email : "No admin found");
+  const downloadLink = process.env.PLANNER_SOFTCOPY_LINK || "https://drive.google.com/...";
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center; color: white;">
+        <h1 style="margin: 0; font-size: 24px;">🎯 90-Day Master Success Planner</h1>
+        <p style="margin-top: 5px; opacity: 0.9;">Elite Academy Premium Materials</p>
+      </div>
+      <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); color: #334155;">
+        <p>Dear <strong>${purchase.fullName}</strong>,</p>
+        <p style="color: #10b981; font-weight: bold; font-size: 16px;">✓ Payment Confirmed Successfully!</p>
+        <p>Your digital interactive planner structure is ready for access. It contains daily breakdowns for your entire PSSSB curriculum timeline.</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${downloadLink}" style="display: inline-block; background: #1e3a8a; color: white; text-decoration: none; padding: 14px 35px; border-radius: 6px; font-weight: bold; box-shadow: 0 4px 10px rgba(30,58,138,0.25);">📥 Access Digital Planner</a>
+        </div>
+
+        <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; font-size: 13px;">
+          <strong>Order Reference:</strong> ${purchase.razorpayOrderId || "Manual Order"}<br>
+          <strong>Payment ID:</strong> ${paymentId}
+        </div>
+      </div>
+    </div>
+  `;
+  await sendEmail({ to: purchase.email, subject: "📥 Download Your Elite Academy 90-Day Planner", html });
+  await sendEmail({ to: admin.email, subject: "📥 New Planner Order Received of SoftCopy", html }); // Send to admin
+};
+
+/**
+ * Professional Hardcopy Shipping Confirmation Email
+ */
+const sendPlannerHardcopyEmail = async (purchase, paymentId) => {
+  const admin = await User.findOne({ role: 'admin' });
+  console.log("Admin email for planner hardcopy:", admin ? admin.email : "No admin found");
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #111827 0%, #1f2937 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center; color: white;">
+        <h1 style="margin: 0; font-size: 24px;">📦 Order Confirmed - Hardcopy Book</h1>
+        <p style="margin-top: 5px; opacity: 0.9;">Elite Academy Publications</p>
+      </div>
+      <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); color: #334155;">
+        <p>Dear <strong>${purchase.fullName}</strong>,</p>
+        <p>Thank you for choosing Elite Academy. We are currently preparing your print order of the <strong>90-Day Master Success Planner</strong>.</p>
+        
+        <div style="border-left: 4px solid #1f2937; padding-left: 15px; margin: 20px 0; background: #f9fafb; padding: 12px;">
+          <h4 style="margin: 0 0 5px 0;">📍 Shipping Address:</h4>
+          <p style="margin: 0; font-size: 14px; color: #4b5563;">
+            ${purchase.flatNo || ""}, ${purchase.area || ""}<br>
+            ${purchase.city}, ${purchase.state} - ${purchase.pincode}
+          </p>
+        </div>
+        <p>As soon as our warehouse updates shipment handoffs, tracking notifications with tracking links will follow automatically via email.</p>
+      </div>
+    </div>
+  `;
+  await sendEmail({ to: purchase.email, subject: "📦 Order Secured - Elite Academy 90-Day Master Planner", html });
+  await sendEmail({ to: admin.email, subject: "📦 New Hardcopy Planner Order Received", html }); // Send to admin
+};
+
+/**
+ * Live Courier Tracking Upgrades Email
+ */
+const sendTrackingEmail = async (purchase, trackerId) => {
+  const admin = await User.findOne({ role: 'admin' });
+  console.log("Admin email for tracking update:", admin ? admin.email : "No admin found");
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center; color: white;">
+        <h1 style="margin: 0; font-size: 24px;">🚚 Your Order Has Been Shipped!</h1>
+        <p style="margin-top: 5px; opacity: 0.9;">Elite Academy Delivery Updates</p>
+      </div>
+      <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); color: #334155;">
+        <p>Hi <strong>${purchase.fullName}</strong>,</p>
+        <p>Good news! Your print parcel for the <strong>90-Day Master Success Planner</strong> has been dispatched.</p>
+        
+        <div style="text-align: center; background: #ecfdf5; border: 1px dashed #10b981; padding: 20px; border-radius: 8px; margin: 25px 0;">
+          <span style="font-size: 14px; color: #047857; display: block; font-weight: bold; margin-bottom: 5px;">TRACKING ID / CONSIGNMENT NUMBER</span>
+          <span style="font-size: 22px; font-weight: bold; color: #065f46; letter-spacing: 1px;">${trackerId}</span>
+        </div>
+        
+        <p>Use this number on the carrier tracking page to monitor live parcel delivery progress.</p>
+      </div>
+    </div>
+  `;
+  await sendEmail({ to: purchase.email, subject: "🚚 Shipped: Tracking Info for Your Elite Academy Order", html });
+  await sendEmail({ to: admin.email, subject: "🚚 New Order Shipped", html }); // Send to admin
+
+};
+
 // CORRECT EXPORT
 module.exports = {
   sendEmail,
@@ -2195,4 +2289,7 @@ module.exports = {
   sendPyqsEmail,
   sendDigitalOfflineDemoEmail,
   sendPaymentReminderEmail,
+  sendPlannerSoftcopyEmail,
+  sendPlannerHardcopyEmail,
+  sendTrackingEmail
 };
