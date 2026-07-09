@@ -2212,63 +2212,97 @@ const sendPlannerSoftcopyEmail = async (purchase, paymentId) => {
 
 /**
  * Professional Hardcopy Shipping Confirmation Email
+ * Fixed visibility issues and added contact/dispatch details.
  */
 const sendPlannerHardcopyEmail = async (purchase, paymentId) => {
   const admin = await User.findOne({ role: 'admin' });
   console.log("Admin email for planner hardcopy:", admin ? admin.email : "No admin found");
+  
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; padding: 20px;">
-      <div style="background: linear-gradient(135deg, #111827 0%, #1f2937 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center; color: white;">
-        <h1 style="margin: 0; font-size: 24px;">📦 Order Confirmed - Hardcopy Book</h1>
-        <p style="margin-top: 5px; opacity: 0.9;">Elite Academy Publications</p>
+      <div style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center; color: white;">
+        <h1 style="margin: 0; font-size: 24px; color: #ffffff; font-weight: bold;">📦 Order Confirmed - Hardcopy Book</h1>
+        <p style="margin-top: 5px; opacity: 0.95; color: #ffffff;">Elite Academy Publications</p>
       </div>
-      <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); color: #334155;">
+      
+      <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); color: #334155; line-height: 1.6;">
         <p>Dear <strong>${purchase.fullName}</strong>,</p>
         <p>Thank you for choosing Elite Academy. We are currently preparing your print order of the <strong>90-Day Master Success Planner</strong>.</p>
         
-        <div style="border-left: 4px solid #1f2937; padding-left: 15px; margin: 20px 0; background: #f9fafb; padding: 12px;">
-          <h4 style="margin: 0 0 5px 0;">📍 Shipping Address:</h4>
-          <p style="margin: 0; font-size: 14px; color: #4b5563;">
+        <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+          <p style="margin: 0; font-weight: bold; color: #1e40af;">🚚 Dispatch Timeline:</p>
+          <p style="margin: 5px 0 0 0; font-size: 14px;">Your book will be dispatched within <strong>3-4 days</strong>. As soon as it ships, we will send you an email with your official tracking number.</p>
+        </div>
+
+        <div style="border: 1px solid #e2e8f0; padding: 15px; margin: 20px 0; background: #f8fafc; border-radius: 8px;">
+          <h4 style="margin: 0 0 8px 0; color: #1e3a8a;">📍 Delivery Address:</h4>
+          <p style="margin: 0; font-size: 14px; color: #475569;">
             ${purchase.flatNo || ""}, ${purchase.area || ""}<br>
             ${purchase.city}, ${purchase.state} - ${purchase.pincode}
           </p>
         </div>
-        <p>As soon as our warehouse updates shipment handoffs, tracking notifications with tracking links will follow automatically via email.</p>
+
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 25px 0;" />
+
+        <h4 style="margin: 0 0 10px 0; color: #334155;">📞 Need Help? Contact Us:</h4>
+        <p style="margin: 5px 0; font-size: 14px;"><strong>Call Us:</strong> <a href="tel:+917696954686" style="color: #2563eb; text-decoration: none;">+91 76969 54686</a> (9:00 AM to 7:00 PM)</p>
+        <p style="margin: 5px 0; font-size: 14px;"><strong>WhatsApp:</strong> <a href="https://wa.me/917696954686" style="color: #10b981; text-decoration: none; font-weight: bold;">Click to Chat Instantly</a></p>
+        <p style="margin: 5px 0; font-size: 14px;"><strong>Website:</strong> <a href="http://eliteacademy.pro/" style="color: #2563eb; text-decoration: none;">www.eliteacademy.pro</a></p>
+        <p style="margin: 5px 0; font-size: 14px;"><strong>Our Center:</strong> SCO 144, Sector 24-D, Chandigarh</p>
       </div>
     </div>
   `;
   await sendEmail({ to: purchase.email, subject: "📦 Order Secured - Elite Academy 90-Day Master Planner", html });
-  await sendEmail({ to: admin.email, subject: "📦 New Hardcopy Planner Order Received", html }); // Send to admin
+  await sendEmail({ to: admin.email, subject: "📦 New Hardcopy Planner Order Received", html });
 };
 
 /**
  * Live Courier Tracking Upgrades Email
+ * Clean layout with detailed step-by-step India Post instructions.
  */
 const sendTrackingEmail = async (purchase, trackerId) => {
   const admin = await User.findOne({ role: 'admin' });
   console.log("Admin email for tracking update:", admin ? admin.email : "No admin found");
+  
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; padding: 20px;">
       <div style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center; color: white;">
-        <h1 style="margin: 0; font-size: 24px;">🚚 Your Order Has Been Shipped!</h1>
-        <p style="margin-top: 5px; opacity: 0.9;">Elite Academy Delivery Updates</p>
+        <h1 style="margin: 0; font-size: 24px; color: #ffffff; font-weight: bold;">🚚 Your Order Has Been Shipped!</h1>
+        <p style="margin-top: 5px; opacity: 0.95; color: #ffffff;">Elite Academy Delivery Updates</p>
       </div>
-      <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); color: #334155;">
+      
+      <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); color: #334155; line-height: 1.6;">
         <p>Hi <strong>${purchase.fullName}</strong>,</p>
-        <p>Good news! Your print parcel for the <strong>90-Day Master Success Planner</strong> has been dispatched.</p>
+        <p>Good news! Your physical print parcel for the <strong>90-Day Master Success Planner</strong> has been successfully dispatched via India Post.</p>
         
         <div style="text-align: center; background: #ecfdf5; border: 1px dashed #10b981; padding: 20px; border-radius: 8px; margin: 25px 0;">
-          <span style="font-size: 14px; color: #047857; display: block; font-weight: bold; margin-bottom: 5px;">TRACKING ID / CONSIGNMENT NUMBER</span>
-          <span style="font-size: 22px; font-weight: bold; color: #065f46; letter-spacing: 1px;">${trackerId}</span>
+          <span style="font-size: 13px; color: #047857; display: block; font-weight: bold; margin-bottom: 5px;">TRACKING ID / CONSIGNMENT NUMBER</span>
+          <span style="font-size: 24px; font-weight: bold; color: #065f46; letter-spacing: 1px;">${trackerId}</span>
         </div>
-        
-        <p>Use this number on the carrier tracking page to monitor live parcel delivery progress.</p>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+          <h4 style="margin: 0 0 10px 0; color: #047857;">📌 How to Track Your Parcel:</h4>
+          <ol style="margin: 0; padding-left: 20px; font-size: 14px; color: #475569;">
+            <li style="margin-bottom: 8px;">Open the India Post official tracking page: <a href="https://www.indiapost.gov.in/" target="_blank" style="color: #2563eb; font-weight: bold; text-decoration: underline;">Click Here to Track</a></li>
+            <li style="margin-bottom: 8px;">Locate the <strong>Track & Trace</strong> section on the homepage.</li>
+            <li style="margin-bottom: 8px;">Paste your Consignment Number: <strong style="color: #065f46;">${trackerId}</strong></li>
+            <li style="margin-bottom: 8px;">Complete the simple CAPTCHA code and click <strong>Track Now</strong> to get live location status.</li>
+          </ol>
+          <p style="margin: 12px 0 0 0; font-size: 13px; color: #64748b; font-style: italic;">📅 Estimated delivery window: <strong>5-14 business days</strong> depending on your location.</p>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 25px 0;" />
+
+        <h4 style="margin: 0 0 10px 0; color: #334155;">📞 Support & Queries:</h4>
+        <p style="margin: 5px 0; font-size: 14px;"><strong>Call Us:</strong> <a href="tel:+917696954686" style="color: #2563eb; text-decoration: none;">+91 76969 54686</a> (9:00 AM to 7:00 PM)</p>
+        <p style="margin: 5px 0; font-size: 14px;"><strong>WhatsApp:</strong> <a href="https://wa.me/917696954686" style="color: #10b981; text-decoration: none; font-weight: bold;">Click to Chat Instantly</a></p>
+        <p style="margin: 5px 0; font-size: 14px;"><strong>Website:</strong> <a href="http://eliteacademy.pro/" style="color: #2563eb; text-decoration: none;">www.eliteacademy.pro</a></p>
+        <p style="margin: 5px 0; font-size: 14px;"><strong>Our Address:</strong> SCO 144, Sector 24-D, Chandigarh</p>
       </div>
     </div>
   `;
   await sendEmail({ to: purchase.email, subject: "🚚 Shipped: Tracking Info for Your Elite Academy Order", html });
-  await sendEmail({ to: admin.email, subject: "🚚 New Order Shipped", html }); // Send to admin
-
+  await sendEmail({ to: admin.email, subject: "🚚 New Order Shipped", html });
 };
 
 // CORRECT EXPORT
