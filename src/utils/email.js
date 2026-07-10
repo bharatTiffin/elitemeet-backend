@@ -2203,6 +2203,11 @@ const sendPlannerSoftcopyEmail = async (purchase, paymentId) => {
           <strong>Order Reference:</strong> ${purchase.razorpayOrderId || "Manual Order"}<br>
           <strong>Payment ID:</strong> ${paymentId}
         </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; text-align: center;">
+          <p style="margin: 0 0 10px 0; font-weight: bold; color: #166534;">📢 Join Our Official Updates Community</p>
+          <a href="https://chat.whatsapp.com/K5QXPcLBC8aCE62BGerXoK" style="display: inline-block; background: #25d366; color: white; text-decoration: none; padding: 8px 20px; border-radius: 5px; font-weight: bold; font-size: 14px;">💬 Join WhatsApp Community</a>
+        </div>
       </div>
     </div>
   `;
@@ -2249,6 +2254,11 @@ const sendPlannerHardcopyEmail = async (purchase, paymentId) => {
         <p style="margin: 5px 0; font-size: 14px;"><strong>WhatsApp:</strong> <a href="https://wa.me/917696954686" style="color: #10b981; text-decoration: none; font-weight: bold;">Click to Chat Instantly</a></p>
         <p style="margin: 5px 0; font-size: 14px;"><strong>Website:</strong> <a href="http://eliteacademy.pro/" style="color: #2563eb; text-decoration: none;">www.eliteacademy.pro</a></p>
         <p style="margin: 5px 0; font-size: 14px;"><strong>Our Center:</strong> SCO 144, Sector 24-D, Chandigarh</p>
+
+        <div style="margin-top: 20px; padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; text-align: center;">
+          <p style="margin: 0 0 10px 0; font-weight: bold; color: #166534;">📢 Join Our Official Updates Community</p>
+          <a href="https://chat.whatsapp.com/K5QXPcLBC8aCE62BGerXoK" style="display: inline-block; background: #25d366; color: white; text-decoration: none; padding: 8px 20px; border-radius: 5px; font-weight: bold; font-size: 14px;">💬 Join WhatsApp Community</a>
+        </div>
       </div>
     </div>
   `;
@@ -2298,6 +2308,11 @@ const sendTrackingEmail = async (purchase, trackerId) => {
         <p style="margin: 5px 0; font-size: 14px;"><strong>WhatsApp:</strong> <a href="https://wa.me/917696954686" style="color: #10b981; text-decoration: none; font-weight: bold;">Click to Chat Instantly</a></p>
         <p style="margin: 5px 0; font-size: 14px;"><strong>Website:</strong> <a href="http://eliteacademy.pro/" style="color: #2563eb; text-decoration: none;">www.eliteacademy.pro</a></p>
         <p style="margin: 5px 0; font-size: 14px;"><strong>Our Address:</strong> SCO 144, Sector 24-D, Chandigarh</p>
+
+        <div style="margin-top: 20px; padding: 15px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; text-align: center;">
+          <p style="margin: 0 0 10px 0; font-weight: bold; color: #166534;">📢 Join Our Official Updates Community</p>
+          <a href="https://chat.whatsapp.com/K5QXPcLBC8aCE62BGerXoK" style="display: inline-block; background: #25d366; color: white; text-decoration: none; padding: 8px 20px; border-radius: 5px; font-weight: bold; font-size: 14px;">💬 Join WhatsApp Community</a>
+        </div>
       </div>
     </div>
   `;
