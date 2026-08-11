@@ -22,7 +22,7 @@ const coachingEnrollmentSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["student", "teacher", "friend", "offline student"],
+      enum: ["student", "teacher", "friend", "offline student","offline fatehgarh sahib"],
       default: "student",
       index: true,
     },

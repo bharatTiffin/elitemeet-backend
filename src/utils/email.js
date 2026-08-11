@@ -33,7 +33,7 @@ const transporter = nodemailer.createTransport({
  */
 const sendEmail = async ({ to, subject, text, html }) => {
   await transporter.sendMail({
-    from: '"Elite Academy" <support@eliteacademy.pro>',
+    from: '"Elite Academy" <johnny90566@gmail.com>',
     to,
     subject,
     text,
@@ -678,7 +678,7 @@ const html = `
 
   // 1. Send to Student
   await transporter.sendMail({
-    from: '"Elite Academy" <support@eliteacademy.pro>',
+    from: '"Elite Academy" <johnny90566@gmail.com>',
     to: enrollment.email,
     subject: "🎉 Enrollment Confirmed — Welcome to Coaching Program",
     html: html
@@ -686,7 +686,7 @@ const html = `
 
   // 2. Send to Admin
   await transporter.sendMail({
-    from: '"Elite Academy" <support@eliteacademy.pro>',
+    from: '"Elite Academy" <johnny90566@gmail.com>',
     to: adminEmail,
     subject: `🚀 NEW COACHING ENROLLMENT: ${enrollment.fullName}`,
     html: `<h3>Admin Enrollment Report:</h3>` + html
@@ -2168,7 +2168,7 @@ const sendPaymentReminderEmail = async (enrollment) => {
   `;
 
   await transporter.sendMail({
-    from: '"Elite Academy" <support@eliteacademy.pro>',
+    from: '"Elite Academy" <johnny90566@gmail.com>',
     to: enrollment.email,
     subject: "⚠️ Payment Reminder - Elite Academy",
     html: html
