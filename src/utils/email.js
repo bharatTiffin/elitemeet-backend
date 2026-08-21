@@ -628,7 +628,7 @@ const html = `
               </tr>
               <tr style="border-bottom: 1px solid #e5e7eb;">
                 <td style="padding: 10px 0; color: #6b7280;">Course Duration</td>
-                <td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">5 Months</td>
+                <td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">1 Year</td>
               </tr>
               <tr style="border-bottom: 1px solid #e5e7eb;">
                 <td style="padding: 10px 0; color: #6b7280;">Amount Paid</td>
