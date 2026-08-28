@@ -18,6 +18,10 @@ const userSchema = new mongoose.Schema(
     name: {
       type: String,
     },
+    phone: {
+      type: String,
+      sparse: true, // Only required for manual signup
+    },
     photoUrl: {
       type: String,
     },

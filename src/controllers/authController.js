@@ -64,13 +64,13 @@ const syncUser = async (req, res, next) => {
  */
 const manualSignup = async (req, res, next) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, phone } = req.body;
 
     // Validation
-    if (!email || !password || !name) {
+    if (!email || !password || !name || !phone) {
       return res.status(400).json({
         success: false,
-        message: "Email, password, and name are required"
+        message: "Name, email, password, and phone number are required"
       });
     }
 
@@ -78,6 +78,13 @@ const manualSignup = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: "Password must be at least 6 characters"
+      });
+    }
+
+    if (!/^\d{10}$/.test(phone.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: "Phone number must be a valid 10-digit number"
       });
     }
 
@@ -98,6 +105,7 @@ const manualSignup = async (req, res, next) => {
       email: email.toLowerCase(),
       password: hashedPassword,
       name,
+      phone: phone.trim(),
       signupType: 'manual',
       role: 'user'
     });
@@ -127,6 +135,7 @@ const manualSignup = async (req, res, next) => {
         id: user._id.toString(),
         email: user.email,
         name: user.name,
+        phone: user.phone,
         role: user.role,
       },
     });
@@ -202,6 +211,7 @@ const manualLogin = async (req, res, next) => {
         id: user._id.toString(),
         email: user.email,
         name: user.name,
+        phone: user.phone,
         role: user.role,
       },
     });
