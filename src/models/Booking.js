@@ -38,6 +38,17 @@ const bookingSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    originalAmount: {
+      type: Number,
+    },
+    couponCode: {
+      type: String,
+      default: null,
+    },
+    discountPercent: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: String,
       enum: ["pending", "confirmed", "cancelled", "completed"],

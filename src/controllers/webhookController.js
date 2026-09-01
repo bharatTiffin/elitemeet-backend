@@ -2,6 +2,7 @@
 const crypto = require("crypto");
 const path = require("path");
 const Booking = require("../models/Booking");
+const Coupon = require("../models/Coupon");
 const Slot = require("../models/Slot");
 const User = require("../models/User");
 const MentorshipEnrollment = require("../models/MentorshipEnrollment");
@@ -1851,6 +1852,14 @@ if (isCurrentAffairPurchase) {
         console.warn("⚠️ Slot not found for booking:", booking._id);
       } else {
         console.log("✅ Slot marked as booked:", slot._id, "Previous status:", slot.status);
+      }
+
+      // Consume one use of the coupon applied to this booking, if any
+      if (booking.couponCode) {
+        await Coupon.findOneAndUpdate(
+          { code: booking.couponCode, $expr: { $lt: ["$usedCount", "$maxUses"] } },
+          { $inc: { usedCount: 1 } }
+        ).catch((err) => console.error("Failed to increment coupon usage:", err));
       }
 
       // Fetch admin details

@@ -56,6 +56,7 @@ app.use("/api/slots", require("./src/routes/slotRoutes"));
 app.use("/api/bookings", require("./src/routes/bookingRoutes"));
 app.use("/api/payments", require("./src/routes/paymentRoutes"));
 app.use("/api/mentorship", require("./src/routes/mentorshipRoutes"));
+app.use("/api/coupons", require("./src/routes/couponRoutes"));
 app.use("/api/pdf", require("./src/routes/pdfRoutes"));
 app.use("/api/currentaffair", require("./src/routes/currentaffair"));
 app.use("/api/cron", require("./src/routes/cronRoutes"));

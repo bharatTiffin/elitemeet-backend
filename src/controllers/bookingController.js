@@ -3,6 +3,7 @@
 const Booking = require("../models/Booking");
 const Slot = require("../models/Slot");
 const User = require("../models/User");
+const Coupon = require("../models/Coupon");
 const razorpay = require("../config/razorpay");
 const crypto = require("crypto");
 const { sendEmail } = require("../utils/email");
@@ -14,7 +15,7 @@ const { sendBookingEmails } = require("../utils/email");
  */
 const createBooking = async (req, res, next) => {
   try {
-    const { slotId, userName, fullName, userEmail, email, purpose } = req.body;
+    const { slotId, userName, fullName, userEmail, email, purpose, couponCode } = req.body;
     // Accept both userEmail and email field names
     const finalEmail = userEmail || email;
     const finalUserName = userName || fullName;
@@ -49,15 +50,48 @@ const createBooking = async (req, res, next) => {
     }
 
     try {
+      // 1b. Validate coupon (if provided) and compute the discounted amount
+      const originalAmount = slot.price;
+      let finalAmount = originalAmount;
+      let appliedCoupon = null;
+      let discountPercent = 0;
+
+      if (couponCode && String(couponCode).trim()) {
+        const normalizedCode = String(couponCode).trim().toUpperCase();
+        const coupon = await Coupon.findOne({ code: normalizedCode });
+
+        if (!coupon) {
+          throw Object.assign(new Error("Invalid coupon code"), { statusCode: 400 });
+        }
+        if (!coupon.isActive) {
+          throw Object.assign(new Error("This coupon is no longer active"), { statusCode: 400 });
+        }
+        if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
+          throw Object.assign(new Error("This coupon has expired"), { statusCode: 400 });
+        }
+        if (coupon.usedCount >= coupon.maxUses) {
+          throw Object.assign(new Error("This coupon has reached its usage limit"), { statusCode: 400 });
+        }
+        if (!coupon.applicableServices.includes("oneOnOne")) {
+          throw Object.assign(new Error("This coupon is not valid for this service"), { statusCode: 400 });
+        }
+
+        discountPercent = coupon.discountPercent;
+        const discountAmount = Math.round((originalAmount * discountPercent) / 100);
+        finalAmount = Math.max(originalAmount - discountAmount, 0);
+        appliedCoupon = coupon.code;
+      }
+
       // 2. Create Razorpay order
       const razorpayOrder = await razorpay.orders.create({
-        amount: slot.price * 100, // Convert to paise
+        amount: finalAmount * 100, // Convert to paise
         currency: "INR",
         receipt: `booking_${Date.now()}`,
         notes: {
           slotId: slot._id.toString(),
           userFirebaseUid,
           userEmail: finalEmail,
+          couponCode: appliedCoupon || "",
         },
       });
 
@@ -69,7 +103,10 @@ const createBooking = async (req, res, next) => {
         userName: finalUserName,
         userEmail: finalEmail,
         purpose: purpose || '',
-        amount: slot.price,
+        amount: finalAmount,
+        originalAmount,
+        couponCode: appliedCoupon,
+        discountPercent,
         razorpayOrderId: razorpayOrder.id,
         status: "pending",
         expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
@@ -80,12 +117,17 @@ const createBooking = async (req, res, next) => {
         order: razorpayOrder,
         razorpayOrderId: razorpayOrder.id,
         razorpayKeyId: process.env.RAZORPAY_KEY_ID,
-        amount: slot.price,
+        amount: finalAmount,
+        originalAmount,
+        discountPercent,
         currency: "INR",
       });
     } catch (error) {
       // If anything fails after locking slot, revert it back to free
       await Slot.findByIdAndUpdate(slotId, { status: "free" });
+      if (error.statusCode) {
+        return res.status(error.statusCode).json({ error: error.message });
+      }
       throw error;
     }
   } catch (err) {
@@ -331,6 +373,14 @@ const verifyPayment = async (req, res, next) => {
     }
 
     console.log("✅ Slot marked as booked:", slot._id);
+
+    // 3b. Consume one use of the coupon, if one was applied
+    if (booking.couponCode) {
+      await Coupon.findOneAndUpdate(
+        { code: booking.couponCode, $expr: { $lt: ["$usedCount", "$maxUses"] } },
+        { $inc: { usedCount: 1 } }
+      ).catch((err) => console.error("Failed to increment coupon usage:", err));
+    }
 
     // 4. Get admin and user details
     const admin = await User.findOne({ firebaseUid: slot.adminFirebaseUid });
