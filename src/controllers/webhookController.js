@@ -1869,7 +1869,7 @@ if (isCurrentAffairPurchase) {
       console.log("📧 Sending confirmation emails...");
 
       // WhatsApp contact details for both sides of the booking email
-      const adminWhatsAppNumber = normalizePhone(process.env.ADMIN_WHATSAPP_NUMBER || "7696954686");
+      const adminWhatsAppNumber = normalizePhone(process.env.ADMIN_WHATSAPP_NUMBER || "9988414686");
       const adminWhatsAppLink = buildWhatsAppLink(adminWhatsAppNumber);
       const userWhatsAppNumber = normalizePhone(booking.userPhone);
       const userWhatsAppLink = buildWhatsAppLink(booking.userPhone);
@@ -1877,75 +1877,27 @@ if (isCurrentAffairPurchase) {
       // ✅ SEND EMAILS
       const emailPromises = [];
 
-      // Email to User
       if (booking.userEmail) {
         emailPromises.push(
-          sendEmail({
-            to: booking.userEmail,
-            subject: "Booking Confirmed - Elite Meet",
-            html: `
-              <h2>Booking Confirmed! 🎉</h2>
-              <p>Your consultation slot has been successfully booked.</p>
-              <p><strong>Date:</strong> ${new Date(slot.startTime).toLocaleDateString('en-IN', {
-                timeZone: 'Asia/Kolkata',
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}</p>
-              <p><strong>Time:</strong> ${new Date(slot.startTime).toLocaleTimeString('en-IN', {
-                timeZone: 'Asia/Kolkata',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-              })}</p>
-              <p><strong>Duration:</strong> ${slot.duration} minutes</p>
-              <p><strong>Amount Paid:</strong> ₹${booking.amount}</p>
-              <p><strong>Payment ID:</strong> ${paymentId}</p>
-              <p>You will receive the meeting link 15 minutes before the scheduled time.</p>
-              <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;" />
-              <p>📱 <strong>Need help, or the link doesn't reach you in time?</strong><br>
-              WhatsApp or call us anytime — we're happy to help.</p>
-              ${adminWhatsAppLink ? `<p><a href="${adminWhatsAppLink}" style="display:inline-block;background:#25D366;color:#ffffff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:bold;">💬 Chat on WhatsApp</a></p>` : ''}
-              <p>WhatsApp / Call: <strong>${adminWhatsAppNumber}</strong></p>
-              <p>Best regards,<br>Elite Meet Team</p>
-            `,
+          sendBookingUserEmail({
+            booking,
+            slot,
+            paymentId,
+            whatsappNumber: adminWhatsAppNumber,
+            whatsappLink: adminWhatsAppLink,
           })
         );
       }
 
-      // Email to Admin
       if (admin && admin.email) {
         emailPromises.push(
-          sendEmail({
-            to: admin.email,
-            subject: "New Booking Received - Elite Meet",
-            html: `
-              <h2>New Booking Alert! 📅</h2>
-              <p>You have a new booking for your consultation slot.</p>
-              <p><strong>Client Name:</strong> ${booking.userName}</p>
-              <p><strong>Client Email:</strong> ${booking.userEmail}</p>
-              <p><strong>Client Phone:</strong> ${userWhatsAppNumber || 'Not provided'}</p>
-              ${booking.purpose ? `<p><strong>Purpose/Topic:</strong> ${booking.purpose}</p>` : ''}
-              <p><strong>Date:</strong> ${new Date(slot.startTime).toLocaleDateString('en-IN', {
-                timeZone: 'Asia/Kolkata',
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}</p>
-              <p><strong>Time:</strong> ${new Date(slot.startTime).toLocaleTimeString('en-IN', {
-                timeZone: 'Asia/Kolkata',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-              })}</p>
-              <p><strong>Duration:</strong> ${slot.duration} minutes</p>
-              <p><strong>Amount:</strong> ₹${booking.amount}</p>
-              <p>Please prepare for the scheduled consultation.</p>
-              ${userWhatsAppLink ? `<hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;" /><p><a href="${userWhatsAppLink}" style="display:inline-block;background:#25D366;color:#ffffff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:bold;">💬 WhatsApp ${booking.userName}</a></p><p>WhatsApp / Call: <strong>${userWhatsAppNumber}</strong></p>` : ''}
-              <p>Best regards,<br>Elite Meet Team</p>
-            `,
+          sendBookingAdminEmail({
+            booking,
+            slot,
+            admin,
+            paymentId,
+            whatsappNumber: userWhatsAppNumber,
+            whatsappLink: userWhatsAppLink,
           })
         );
       }

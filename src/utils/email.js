@@ -42,42 +42,172 @@ const sendEmail = async ({ to, subject, text, html }) => {
 };
 
 /**
- * Sends booking confirmation emails to user and admin
+ * Shared responsive/dark-mode-aware base styles for the one-on-one booking
+ * confirmation emails (user + admin variants below).
  */
-const sendBookingEmails = async ({ user, admin, slot, meetLink }) => {
-  const start = new Date(slot.startTime).toLocaleString("en-IN", {
+const bookingEmailStyles = `
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; margin: 0; padding: 16px; background-color: #f1f5f9; color: #1e293b; font-size: 16px; line-height: 1.6; }
+  @media (prefers-color-scheme: dark) { body { background-color: #0f172a; color: #f1f5f9; } }
+  .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+  @media (prefers-color-scheme: dark) { .container { background: #1e293b; box-shadow: 0 10px 30px rgba(0,0,0,0.4); } }
+  .header { padding: 36px 24px; text-align: center; }
+  .header .emoji { font-size: 46px; line-height: 1; }
+  .header h1 { color: #ffffff; margin: 12px 0 0; font-size: 26px; font-weight: 800; }
+  .content { padding: 28px 24px 32px; }
+  .greeting { font-size: 19px; font-weight: 700; margin: 0 0 10px; }
+  .lead { font-size: 16px; color: #475569; margin: 0 0 22px; }
+  @media (prefers-color-scheme: dark) { .lead { color: #94a3b8; } }
+  .details-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 6px 22px; margin: 22px 0; }
+  @media (prefers-color-scheme: dark) { .details-card { background: #0f172a; border-color: #334155; } }
+  .details-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid #e2e8f0; font-size: 16px; }
+  @media (prefers-color-scheme: dark) { .details-row { border-color: #334155; } }
+  .details-row:last-child { border-bottom: none; }
+  .details-label { color: #64748b; font-weight: 600; }
+  @media (prefers-color-scheme: dark) { .details-label { color: #94a3b8; } }
+  .details-value { color: #0f172a; font-weight: 700; text-align: right; }
+  @media (prefers-color-scheme: dark) { .details-value { color: #f1f5f9; } }
+  .whatsapp-box { background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border-radius: 18px; padding: 30px 24px; text-align: center; margin: 26px 0 10px; }
+  .whatsapp-box .title { color: #ffffff; font-size: 21px; font-weight: 800; margin: 0 0 8px; }
+  .whatsapp-box .sub { color: #dcfce7; font-size: 15px; margin: 0 0 22px; line-height: 1.5; }
+  .whatsapp-btn { display: inline-block; background: #ffffff; color: #128C7E; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-weight: 800; font-size: 19px; box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
+  .whatsapp-number { color: #ecfdf5; font-size: 15px; margin: 18px 0 0; }
+  .whatsapp-number strong { font-size: 22px; letter-spacing: 1px; display: inline-block; margin-top: 4px; }
+  .footer { text-align: center; padding: 22px 24px 28px; color: #94a3b8; font-size: 14px; }
+`;
+
+const formatSlotDate = (startTime) =>
+  new Date(startTime).toLocaleDateString("en-IN", {
     timeZone: "Asia/Kolkata",
-  });
-  const end = new Date(slot.endTime).toLocaleString("en-IN", {
-    timeZone: "Asia/Kolkata",
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 
-  const subject = "Your session is confirmed - Elite Meet";
+const formatSlotTime = (startTime) =>
+  new Date(startTime).toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+/**
+ * Booking confirmation email sent to the student. Leads with a big,
+ * one-tap "message us on WhatsApp" button using the admin's WhatsApp number.
+ */
+const sendBookingUserEmail = async ({ booking, slot, paymentId, whatsappNumber, whatsappLink }) => {
   const html = `
-    <p>Hi ${user.name || ""},</p>
-    <p>Your session is confirmed.</p>
-    <p><strong>Time:</strong> ${start} - ${end} (IST)</p>
-    <p><strong>Meet link:</strong> <a href="${meetLink}">${meetLink}</a></p>
-    <p>Thanks!</p>
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="color-scheme" content="light dark">
+      <style>${bookingEmailStyles}
+        .header { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="emoji">🎉</div>
+          <h1>Booking Confirmed!</h1>
+        </div>
+        <div class="content">
+          <p class="greeting">Hi ${booking.userName},</p>
+          <p class="lead">Your 1-on-1 session with Elite Academy is booked and confirmed. Here are your session details:</p>
+
+          <div class="details-card">
+            <div class="details-row"><span class="details-label">📅 Date</span><span class="details-value">${formatSlotDate(slot.startTime)}</span></div>
+            <div class="details-row"><span class="details-label">🕐 Time</span><span class="details-value">${formatSlotTime(slot.startTime)}</span></div>
+            <div class="details-row"><span class="details-label">⏱️ Duration</span><span class="details-value">${slot.duration} minutes</span></div>
+            <div class="details-row"><span class="details-label">💳 Amount Paid</span><span class="details-value">₹${booking.amount}</span></div>
+            <div class="details-row"><span class="details-label">🧾 Payment ID</span><span class="details-value" style="font-size:13px;">${paymentId}</span></div>
+          </div>
+
+          <p class="lead" style="margin-bottom: 0;">You will receive the meeting link 15 minutes before your scheduled time.</p>
+
+          ${whatsappLink ? `
+          <div class="whatsapp-box">
+            <p class="title">💬 Message Us Directly on WhatsApp</p>
+            <p class="sub">Please click the button below and message us on WhatsApp — that's the fastest way to reach us for anything about your session.</p>
+            <a href="${whatsappLink}" class="whatsapp-btn">💬 Chat on WhatsApp</a>
+            <p class="whatsapp-number">or save our number<br><strong>${whatsappNumber}</strong></p>
+          </div>
+          ` : ''}
+        </div>
+        <div class="footer">Best regards,<br><strong>Elite Academy Team</strong></div>
+      </div>
+    </body>
+    </html>
   `;
 
-  // to user
   await sendEmail({
-    to: user.email,
-    subject,
+    to: booking.userEmail,
+    subject: "🎉 Booking Confirmed - Elite Academy",
     html,
   });
+};
 
-  // to admin
+/**
+ * New-booking notification sent to the admin. Leads with a big, one-tap
+ * "message the student on WhatsApp" button using the student's own number.
+ */
+const sendBookingAdminEmail = async ({ booking, slot, admin, paymentId, whatsappNumber, whatsappLink }) => {
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="color-scheme" content="light dark">
+      <style>${bookingEmailStyles}
+        .header { background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <div class="emoji">📅</div>
+          <h1>New Booking Received!</h1>
+        </div>
+        <div class="content">
+          <p class="greeting">Hi ${admin?.name || "there"},</p>
+          <p class="lead">You have a new 1-on-1 session booking. Here are the details:</p>
+
+          <div class="details-card">
+            <div class="details-row"><span class="details-label">🙋 Client Name</span><span class="details-value">${booking.userName}</span></div>
+            <div class="details-row"><span class="details-label">📧 Client Email</span><span class="details-value" style="font-size:14px;">${booking.userEmail}</span></div>
+            <div class="details-row"><span class="details-label">📱 Client Phone</span><span class="details-value">${whatsappNumber || "Not provided"}</span></div>
+            ${booking.purpose ? `<div class="details-row"><span class="details-label">💬 Topic</span><span class="details-value">${booking.purpose}</span></div>` : ''}
+            <div class="details-row"><span class="details-label">📅 Date</span><span class="details-value">${formatSlotDate(slot.startTime)}</span></div>
+            <div class="details-row"><span class="details-label">🕐 Time</span><span class="details-value">${formatSlotTime(slot.startTime)}</span></div>
+            <div class="details-row"><span class="details-label">⏱️ Duration</span><span class="details-value">${slot.duration} minutes</span></div>
+            <div class="details-row"><span class="details-label">💳 Amount</span><span class="details-value">₹${booking.amount}</span></div>
+          </div>
+
+          <p class="lead" style="margin-bottom: 0;">Please prepare for the scheduled consultation.</p>
+
+          ${whatsappLink ? `
+          <div class="whatsapp-box">
+            <p class="title">💬 Message ${booking.userName} on WhatsApp</p>
+            <p class="sub">Please click the button below to message the client directly on WhatsApp.</p>
+            <a href="${whatsappLink}" class="whatsapp-btn">💬 Chat on WhatsApp</a>
+            <p class="whatsapp-number">or save their number<br><strong>${whatsappNumber}</strong></p>
+          </div>
+          ` : ''}
+        </div>
+        <div class="footer">Best regards,<br><strong>Elite Academy Team</strong></div>
+      </div>
+    </body>
+    </html>
+  `;
+
   await sendEmail({
     to: admin.email,
-    subject: `New booking: ${user.name || user.email}`,
-    html: `
-      <p>New booking received.</p>
-      <p><strong>User:</strong> ${user.name || ""} (${user.email})</p>
-      <p><strong>Time:</strong> ${start} - ${end}</p>
-      <p><strong>Meet link:</strong> <a href="${meetLink}">${meetLink}</a></p>
-    `,
+    subject: `📅 New Booking: ${booking.userName}`,
+    html,
   });
 };
 
@@ -2324,7 +2454,8 @@ const sendTrackingEmail = async (purchase, trackerId) => {
 module.exports = {
   sendEmail,
   sendEmailWithPDF,
-  sendBookingEmails,    // This is correct name (not sendBookingConfirmation)
+  sendBookingUserEmail,
+  sendBookingAdminEmail,
   sendBookEmail,        // NEW - for single books
   sendPackageEmail,      // NEW - for packages
   sendCoachingEmail,
