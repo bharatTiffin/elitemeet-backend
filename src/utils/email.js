@@ -72,6 +72,12 @@ const bookingEmailStyles = `
   .whatsapp-btn { display: inline-block; background: #ffffff; color: #128C7E; text-decoration: none; padding: 16px 40px; border-radius: 12px; font-weight: 800; font-size: 19px; box-shadow: 0 6px 16px rgba(0,0,0,0.15); }
   .whatsapp-number { color: #ecfdf5; font-size: 15px; margin: 18px 0 0; }
   .whatsapp-number strong { font-size: 22px; letter-spacing: 1px; display: inline-block; margin-top: 4px; }
+  .topic-box { background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #3b82f6; border-radius: 12px; padding: 16px 20px; margin: 22px 0; }
+  @media (prefers-color-scheme: dark) { .topic-box { background: #0f1e3d; border-color: #1e3a8a; } }
+  .topic-box .topic-label { color: #2563eb; font-weight: 700; font-size: 14px; margin: 0 0 6px; }
+  @media (prefers-color-scheme: dark) { .topic-box .topic-label { color: #60a5fa; } }
+  .topic-box .topic-text { color: #1e293b; font-size: 16px; margin: 0; line-height: 1.6; }
+  @media (prefers-color-scheme: dark) { .topic-box .topic-text { color: #e2e8f0; } }
   .footer { text-align: center; padding: 22px 24px 28px; color: #94a3b8; font-size: 14px; }
 `;
 
@@ -180,12 +186,18 @@ const sendBookingAdminEmail = async ({ booking, slot, admin, paymentId, whatsapp
             <div class="details-row"><span class="details-label">🙋 Client Name</span><span class="details-value">${booking.userName}</span></div>
             <div class="details-row"><span class="details-label">📧 Client Email</span><span class="details-value" style="font-size:14px;">${booking.userEmail}</span></div>
             <div class="details-row"><span class="details-label">📱 Client Phone</span><span class="details-value">${whatsappNumber || "Not provided"}</span></div>
-            ${booking.purpose ? `<div class="details-row"><span class="details-label">💬 Topic</span><span class="details-value">${booking.purpose}</span></div>` : ''}
             <div class="details-row"><span class="details-label">📅 Date</span><span class="details-value">${formatSlotDate(slot.startTime)}</span></div>
             <div class="details-row"><span class="details-label">🕐 Time</span><span class="details-value">${formatSlotTime(slot.startTime)}</span></div>
             <div class="details-row"><span class="details-label">⏱️ Duration</span><span class="details-value">${slot.duration} minutes</span></div>
             <div class="details-row"><span class="details-label">💳 Amount</span><span class="details-value">₹${booking.amount}</span></div>
           </div>
+
+          ${booking.purpose ? `
+          <div class="topic-box">
+            <p class="topic-label">💬 DISCUSSION TOPIC</p>
+            <p class="topic-text">${booking.purpose}</p>
+          </div>
+          ` : ''}
 
           <p class="lead" style="margin-bottom: 0;">Please prepare for the scheduled consultation.</p>
 
