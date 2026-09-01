@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const path = require("path");
 const Booking = require("../models/Booking");
 const Coupon = require("../models/Coupon");
+const { buildWhatsAppLink, normalizePhone } = require("../utils/phone");
 const Slot = require("../models/Slot");
 const User = require("../models/User");
 const MentorshipEnrollment = require("../models/MentorshipEnrollment");
@@ -1867,6 +1868,12 @@ if (isCurrentAffairPurchase) {
 
       console.log("📧 Sending confirmation emails...");
 
+      // WhatsApp contact details for both sides of the booking email
+      const adminWhatsAppNumber = normalizePhone(process.env.ADMIN_WHATSAPP_NUMBER || "7696954686");
+      const adminWhatsAppLink = buildWhatsAppLink(adminWhatsAppNumber);
+      const userWhatsAppNumber = normalizePhone(booking.userPhone);
+      const userWhatsAppLink = buildWhatsAppLink(booking.userPhone);
+
       // ✅ SEND EMAILS
       const emailPromises = [];
 
@@ -1896,6 +1903,11 @@ if (isCurrentAffairPurchase) {
               <p><strong>Amount Paid:</strong> ₹${booking.amount}</p>
               <p><strong>Payment ID:</strong> ${paymentId}</p>
               <p>You will receive the meeting link 15 minutes before the scheduled time.</p>
+              <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;" />
+              <p>📱 <strong>Need help, or the link doesn't reach you in time?</strong><br>
+              WhatsApp or call us anytime — we're happy to help.</p>
+              ${adminWhatsAppLink ? `<p><a href="${adminWhatsAppLink}" style="display:inline-block;background:#25D366;color:#ffffff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:bold;">💬 Chat on WhatsApp</a></p>` : ''}
+              <p>WhatsApp / Call: <strong>${adminWhatsAppNumber}</strong></p>
               <p>Best regards,<br>Elite Meet Team</p>
             `,
           })
@@ -1913,6 +1925,7 @@ if (isCurrentAffairPurchase) {
               <p>You have a new booking for your consultation slot.</p>
               <p><strong>Client Name:</strong> ${booking.userName}</p>
               <p><strong>Client Email:</strong> ${booking.userEmail}</p>
+              <p><strong>Client Phone:</strong> ${userWhatsAppNumber || 'Not provided'}</p>
               ${booking.purpose ? `<p><strong>Purpose/Topic:</strong> ${booking.purpose}</p>` : ''}
               <p><strong>Date:</strong> ${new Date(slot.startTime).toLocaleDateString('en-IN', {
                 timeZone: 'Asia/Kolkata',
@@ -1930,6 +1943,7 @@ if (isCurrentAffairPurchase) {
               <p><strong>Duration:</strong> ${slot.duration} minutes</p>
               <p><strong>Amount:</strong> ₹${booking.amount}</p>
               <p>Please prepare for the scheduled consultation.</p>
+              ${userWhatsAppLink ? `<hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;" /><p><a href="${userWhatsAppLink}" style="display:inline-block;background:#25D366;color:#ffffff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:bold;">💬 WhatsApp ${booking.userName}</a></p><p>WhatsApp / Call: <strong>${userWhatsAppNumber}</strong></p>` : ''}
               <p>Best regards,<br>Elite Meet Team</p>
             `,
           })

@@ -34,6 +34,10 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    userPhone: {
+      type: String,
+      required: false,
+    },
     amount: {
       type: Number,
       required: true,

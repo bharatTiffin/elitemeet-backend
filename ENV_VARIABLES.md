@@ -22,6 +22,9 @@
 - `EMAIL_USER` - SMTP username
 - `EMAIL_PASS` - SMTP password
 
+### One-on-One Booking Contact
+- `ADMIN_WHATSAPP_NUMBER` - 10-digit number shown to users as the admin's WhatsApp/call contact in booking confirmation emails (default: 7696954686)
+
 ### Course Prices
 - `COACHING_PRICE` - Price for regular coaching course (default: 5999)
 - `PSTET_PRICE` - Price for PSTET & CTET 1 Month Crash Course (default: 2999)
