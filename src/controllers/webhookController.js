@@ -654,18 +654,8 @@ if (isBookPurchase) {
         return res.status(400).json({ error: "User information missing" });
       }
 
-      // Get typing price from environment
-      const getTypingPrice = () => {
-        const price = process.env.TYPING_PRICE;
-        if (price) {
-          const parsedPrice = parseInt(price, 10);
-          if (!isNaN(parsedPrice) && parsedPrice > 0) {
-            return parsedPrice;
-          }
-        }
-        return 799; // Default price
-      };
-    
+      const getTypingPrice = () => 799;
+
       purchase = new TypingPurchase({
         userFirebaseUid: userFirebaseUid,
         userName: userName,

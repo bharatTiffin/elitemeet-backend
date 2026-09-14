@@ -10,17 +10,7 @@ const razorpay = new Razorpay({
 // Get typing course info (price, description, etc.)
 const getTypingInfo = async (req, res, next) => {
   try {
-    // Get typing price from environment variable
-    const getTypingPrice = () => {
-      const price = process.env.TYPING_PRICE;
-      if (price) {
-        const parsedPrice = parseInt(price, 10);
-        if (!isNaN(parsedPrice) && parsedPrice > 0) {
-          return parsedPrice;
-        }
-      }
-      return 799; // Default price
-    };
+    const getTypingPrice = () => 799;
 
     const typingInfo = {
       title: "PUNJABI & ENGLISH TYPING TRAINING",
@@ -57,17 +47,7 @@ const createTypingPurchase = async (req, res, next) => {
       return res.status(400).json({ error: "Name and email are required to continue" });
     }
 
-    // Get typing price from environment
-    const getTypingPrice = () => {
-      const price = process.env.TYPING_PRICE;
-      if (price) {
-        const parsedPrice = parseInt(price, 10);
-        if (!isNaN(parsedPrice) && parsedPrice > 0) {
-          return parsedPrice;
-        }
-      }
-      return 799; // Default price
-    };
+    const getTypingPrice = () => 799;
 
     const typingPrice = getTypingPrice();
 
