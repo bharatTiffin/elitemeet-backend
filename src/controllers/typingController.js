@@ -19,7 +19,7 @@ const getTypingInfo = async (req, res, next) => {
           return parsedPrice;
         }
       }
-      return 499; // Default price
+      return 799; // Default price
     };
 
     const typingInfo = {
@@ -66,7 +66,7 @@ const createTypingPurchase = async (req, res, next) => {
           return parsedPrice;
         }
       }
-      return 499; // Default price
+      return 799; // Default price
     };
 
     const typingPrice = getTypingPrice();
