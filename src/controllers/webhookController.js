@@ -663,7 +663,7 @@ if (isBookPurchase) {
             return parsedPrice;
           }
         }
-        return 499; // Default price
+        return 799; // Default price
       };
     
       purchase = new TypingPurchase({
