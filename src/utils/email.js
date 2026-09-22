@@ -2462,6 +2462,158 @@ const sendTrackingEmail = async (purchase, trackerId) => {
   await sendEmail({ to: admin.email, subject: "🚚 New Order Shipped", html });
 };
 
+/**
+ * Sends Mock Test Prep Mode access confirmation (app-only product, no web/PDF component)
+ */
+const sendMockTestEmail = async (enrollment, paymentId) => {
+  const adminEmail = process.env.ADMIN_EMAIL || "2025eliteacademy@gmail.com";
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3f4f6;">
+      <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
+
+        <!-- ═══ BANNER ═══ -->
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 24px 24px 20px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0 0 4px 0; font-size: 24px; letter-spacing: -0.5px;">🎯 Prep Mode Unlocked!</h1>
+          <p style="color: #d1fae5; margin: 0; font-size: 14px;">Your Personalized Mock Test &amp; Weak-Topic Tracker &nbsp;·&nbsp; Elite Academy</p>
+        </div>
+
+        <div style="padding: 32px 28px;">
+
+          <p style="font-size: 16px; color: #374151; margin: 0 0 6px 0;">Dear <strong>${enrollment.fullName}</strong>,</p>
+          <p style="font-size: 15px; color: #6b7280; line-height: 1.6; margin: 0 0 28px 0;">
+            Your payment is confirmed and Prep Mode is now unlocked on your account. Prep Mode gives you a Mock Test, tells you exactly which topics you're weak in, and won't unlock your next Mock Test until you've worked through them — so your score climbs step by step instead of guesswork.
+          </p>
+
+          <!-- ═══ DOWNLOAD THE APP ═══ -->
+          <div style="background: #fdf4ff; border: 1.5px solid #d8b4fe; border-radius: 12px; padding: 22px 20px; margin-bottom: 16px;">
+            <div style="display: flex; align-items: flex-start; gap: 14px;">
+              <div style="background: #9333ea; color: white; font-size: 15px; font-weight: 800; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 32px; text-align: center;">1</div>
+              <div style="flex: 1;">
+                <h3 style="margin: 0 0 4px 0; color: #7e22ce; font-size: 17px;">Download the Elite Academy App</h3>
+                <p style="margin: 0 0 16px 0; font-size: 14px; color: #6b21a8; line-height: 1.55;">
+                  Prep Mode lives inside the Elite Academy mobile app — install it to get started.
+                </p>
+
+                <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 18px;">
+                  <tr>
+                    <td style="padding-right: 8px;">
+                      <a href="https://play.google.com/store/apps/details?id=com.johnnykhore.eliteacademy&hl=en"
+                         style="display: block; text-decoration: none; background: linear-gradient(135deg, #00b09b, #16a34a); border-radius: 10px; padding: 14px 10px; text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,0.15);">
+                        <div style="font-size: 22px; line-height: 1;">🤖</div>
+                        <div style="color: #d1fae5; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; margin-top: 4px; text-transform: uppercase;">Get it on</div>
+                        <div style="color: #ffffff; font-size: 16px; font-weight: 800; margin-top: 1px;">Google Play</div>
+                      </a>
+                    </td>
+                    <td style="padding-left: 8px;">
+                      <a href="https://apps.apple.com/in/app/elite-academy-mock-tests/id6746954938"
+                         style="display: block; text-decoration: none; background: linear-gradient(135deg, #434343, #000000); border-radius: 10px; padding: 14px 10px; text-align: center; box-shadow: 0 3px 8px rgba(0,0,0,0.25);">
+                        <div style="font-size: 22px; line-height: 1;">🍎</div>
+                        <div style="color: #d1d5db; font-size: 10px; font-weight: 600; letter-spacing: 0.5px; margin-top: 4px; text-transform: uppercase;">Download on the</div>
+                        <div style="color: #ffffff; font-size: 16px; font-weight: 800; margin-top: 1px;">App Store</div>
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- Login Credentials -->
+                <div style="background: white; border: 1px solid #e9d5ff; border-radius: 10px; padding: 16px;">
+                  <p style="margin: 0 0 10px 0; font-size: 13px; font-weight: 700; color: #7e22ce; text-transform: uppercase; letter-spacing: 0.5px;">🔐 Your Login Credentials</p>
+                  <p style="margin: 0 0 6px 0; font-size: 14px; color: #374151;"><strong>Email:</strong> &nbsp;<span style="color: #111827;">${enrollment.email}</span></p>
+                  <p style="margin: 0 0 12px 0; font-size: 14px; color: #374151;"><strong>Password:</strong> &nbsp;<span style="color: #111827; font-family: monospace; background: #f3f4f6; padding: 3px 8px; border-radius: 4px;">${enrollment.appPassword}</span></p>
+                  <p style="margin: 0; font-size: 12px; color: #6b7280; line-height: 1.5;">
+                    Can't log in? Use <strong>Forgot Password</strong> on the app, or call us at <strong>7696954686</strong>.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ TAKE YOUR FIRST MOCK TEST ═══ -->
+          <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 12px; padding: 22px 20px; margin-bottom: 28px;">
+            <div style="display: flex; align-items: flex-start; gap: 14px;">
+              <div style="background: #22c55e; color: white; font-size: 15px; font-weight: 800; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; line-height: 32px; text-align: center;">2</div>
+              <div style="flex: 1;">
+                <h3 style="margin: 0 0 4px 0; color: #15803d; font-size: 17px;">Open Prep Mode &amp; Take Your First Mock Test</h3>
+                <p style="margin: 0; font-size: 14px; color: #166534; line-height: 1.55;">
+                  After logging in, tap the <strong>Prep Mode</strong> tab and take your first Mock Test. We'll show you exactly which topics need work — clear those, and your next Mock Test unlocks automatically.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ ENROLLMENT PROFILE ═══ -->
+          <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 22px 20px; margin-bottom: 28px;">
+            <h3 style="color: #111827; margin: 0 0 16px 0; font-size: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 12px;">📋 Enrollment Profile</h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 0; color: #6b7280;">Full Name</td>
+                <td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">${enrollment.fullName}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 0; color: #6b7280;">Father's Name</td>
+                <td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">${enrollment.fatherName}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 0; color: #6b7280;">Mobile Number</td>
+                <td style="padding: 10px 0; color: #111827; text-align: right; font-weight: 500;">${enrollment.mobile}</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #e5e7eb;">
+                <td style="padding: 10px 0; color: #6b7280;">Amount Paid</td>
+                <td style="padding: 10px 0; color: #059669; text-align: right; font-weight: 700; font-size: 15px;">₹${enrollment.amount}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; color: #6b7280;">Payment ID</td>
+                <td style="padding: 10px 0; color: #111827; text-align: right; font-size: 11px; font-family: monospace;">${paymentId}</td>
+              </tr>
+            </table>
+          </div>
+
+          <p style="font-size: 13px; color: #6b7280; margin: 0 0 20px 0; line-height: 1.6;">
+            Didn't receive this email or facing an issue? Call us immediately at <strong>7696954686</strong>.
+          </p>
+
+          <p style="font-size: 15px; color: #374151; margin: 0;">
+            Best regards,<br>
+            <strong>Elite Academy Team</strong>
+          </p>
+
+        </div>
+
+        <!-- ═══ FOOTER ═══ -->
+        <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+          <p style="color: #6b7280; font-size: 11px; margin: 5px 0;">© 2026 Elite Academy. All rights reserved.</p>
+          <p style="color: #6b7280; font-size: 11px; margin: 5px 0;">Your Success, Our Mission 🎓</p>
+        </div>
+
+      </div>
+    </body>
+    </html>
+  `;
+
+  // 1. Send to Student
+  await transporter.sendMail({
+    from: '"Elite Academy" <johnny90566@gmail.com>',
+    to: enrollment.email,
+    subject: "🎯 Prep Mode Unlocked — Take Your First Mock Test",
+    html: html
+  });
+
+  // 2. Send to Admin
+  await transporter.sendMail({
+    from: '"Elite Academy" <johnny90566@gmail.com>',
+    to: adminEmail,
+    subject: `🚀 NEW PREP MODE ENROLLMENT: ${enrollment.fullName}`,
+    html: `<h3>Admin Enrollment Report:</h3>` + html
+  });
+};
+
 // CORRECT EXPORT
 module.exports = {
   sendEmail,
@@ -2483,5 +2635,6 @@ module.exports = {
   sendPaymentReminderEmail,
   sendPlannerSoftcopyEmail,
   sendPlannerHardcopyEmail,
-  sendTrackingEmail
+  sendTrackingEmail,
+  sendMockTestEmail
 };

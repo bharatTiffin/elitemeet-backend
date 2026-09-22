@@ -2,6 +2,7 @@ const CoachingEnrollment = require("../models/CoachingEnrollment");
 const CrashCourse = require("../models/CrashCourse");
 const WeeklyTestSeries = require("../models/WeeklyTestSeries");
 const Slot = require("../models/Slot");
+const MockTestEnrollment = require("../models/MockTestEnrollment");
 
 /**
  * Fetch all confirmed enrollments with full details
@@ -45,6 +46,27 @@ exports.getAllConfirmedDetailsCrashCourse = async (req, res) => {
     // 3. .sort("-createdAt") puts the newest users at the top
     const confirmedUsers = await CrashCourse.find({ status: "confirmed" })
       .select("-appPassword") 
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      total: confirmedUsers.length,
+      users: confirmedUsers
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve enrollment details",
+      error: error.message
+    });
+  }
+};
+
+
+exports.getAllConfirmedMockTest = async (req, res) => {
+  try {
+    const confirmedUsers = await MockTestEnrollment.find({ status: "confirmed" })
+      .select("-appPassword")
       .sort({ createdAt: -1 });
 
     res.status(200).json({

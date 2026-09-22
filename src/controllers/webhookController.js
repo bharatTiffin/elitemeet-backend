@@ -33,6 +33,8 @@ const FrenchCourse = require("../models/frenchCourse");
 const DigitalOfflineDemoRegistration = require("../models/DigitalOfflineDemoRegistration");
 const PlannerPurchase = require("../models/PlannerPurchase");
 const { sendPlannerSoftcopyEmail, sendPlannerHardcopyEmail } = require("../utils/email");
+const MockTestEnrollment = require("../models/MockTestEnrollment");
+const { sendMockTestEmail } = require("../utils/email");
 
 // Get PDF links from ENV
 const getPDFLinks = () => ({
@@ -146,8 +148,11 @@ const handleRazorpayWebhook = async (req, res) => {
   orderDetails?.notes?.purchaseType === "package" ||
   (await BookPurchase.findOne({ orderId: orderId }));
 
-  const isCoachingPurchase = orderDetails?.notes?.purchaseType === "coaching" || 
-                           (await CoachingEnrollment.findOne({ razorpayOrderId: orderId }));                
+  const isCoachingPurchase = orderDetails?.notes?.purchaseType === "coaching" ||
+                           (await CoachingEnrollment.findOne({ razorpayOrderId: orderId }));
+
+  const isMockTestPurchase = orderDetails?.notes?.purchaseType === "mock_test" ||
+                           (await MockTestEnrollment.findOne({ razorpayOrderId: orderId }));
 
   const isMonthlyCurrentAffairPurchase = orderDetails?.notes?.purchaseType === "monthly_magazine" ||
                                          (await MonthlyCurrentAffairPurchase.findOne({ orderId: orderId }));
@@ -232,6 +237,29 @@ const handleRazorpayWebhook = async (req, res) => {
   //   }
   // }
 }
+
+  if (isMockTestPurchase) {
+    console.log("🎯 Processing Prep Mode (Mock Test) enrollment payment");
+
+    const enrollment = await MockTestEnrollment.findOneAndUpdate(
+      { razorpayOrderId: orderId },
+      {
+        status: "confirmed",
+        razorpayPaymentId: paymentId
+      },
+      { new: true }
+    );
+
+    if (enrollment) {
+      console.log(`✅ Prep Mode access confirmed for: ${enrollment.email}`);
+      try {
+        await sendMockTestEmail(enrollment, paymentId);
+        console.log("📧 Success: Prep Mode emails sent to User and Admin");
+      } catch (emailErr) {
+        console.error("❌ Email Error:", emailErr);
+      }
+    }
+  }
 
 // Handle Crash Course Enrollment
 const isCrashCoursePurchase = orderDetails?.notes?.purchaseType === "crash-course" || 

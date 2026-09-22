@@ -11,6 +11,7 @@ router.get("/all-confirmed-crash-course",auth, adminController.getAllConfirmedDe
 router.get("/all-confirmed-weekly-test",auth, adminController.getAllConfirmedDetailsWeeklyTest);
 router.get("/all-confirmed-teachers-friends",auth, adminController.getAllConfirmedTeachersAndFriends);
 router.get("/all-confirmed-offline-students",auth, adminController.getAllConfirmedOfflineStudents);
+router.get("/all-confirmed-mock-test",auth, adminController.getAllConfirmedMockTest);
 // Auto-create daily slot at 9pm for ₹599 (triggered by Uptime Robot)
 router.get("/auto-create-daily-slot", adminController.autoCreateDailySlot);
 
