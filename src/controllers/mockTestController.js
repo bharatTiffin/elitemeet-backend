@@ -2,7 +2,7 @@ const MockTestEnrollment = require("../models/MockTestEnrollment");
 const User = require("../models/User");
 const Razorpay = require("razorpay");
 const bcrypt = require("bcrypt");
-const { sendMockTestEmail } = require("../utils/email");
+const { sendMockTestEmail, sendMockTestPaymentReminderEmail } = require("../utils/email");
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -65,6 +65,10 @@ exports.enrollAndCreateOrder = async (req, res) => {
   }
 };
 
+// Full payment + confirmed -> access. Partial payment + confirmed -> access
+// only while paymentExpiryDate hasn't passed (expiry is enforced here
+// automatically, not just via the admin's manual suspend action). Any other
+// status (pending/cancelled/fee_pending, i.e. admin-suspended) -> no access.
 exports.checkAccess = async (req, res) => {
   try {
     const { email } = req.query;
@@ -76,22 +80,32 @@ exports.checkAccess = async (req, res) => {
       });
     }
 
-    const confirmedEnrollment = await MockTestEnrollment.findOne({
+    const enrollment = await MockTestEnrollment.findOne({
       email: { $regex: new RegExp(`^${email}$`, 'i') },
       status: "confirmed"
     });
 
-    if (confirmedEnrollment) {
-      return res.status(200).json({
-        hasAccess: true,
-        message: "Access granted"
-      });
-    } else {
+    if (!enrollment) {
       return res.status(200).json({
         hasAccess: false,
         message: "No confirmed enrollment found"
       });
     }
+
+    if (enrollment.paymentType === "partial") {
+      const expired = enrollment.paymentExpiryDate && new Date() > new Date(enrollment.paymentExpiryDate);
+      if (expired) {
+        return res.status(200).json({
+          hasAccess: false,
+          message: "Partial payment expired"
+        });
+      }
+    }
+
+    return res.status(200).json({
+      hasAccess: true,
+      message: "Access granted"
+    });
   } catch (error) {
     return res.status(500).json({
       hasAccess: false,
@@ -103,7 +117,10 @@ exports.checkAccess = async (req, res) => {
 
 exports.adminAddEnrollment = async (req, res) => {
   try {
-    const { fullName, fatherName, mobile, email, amount, sendEmail } = req.body;
+    const {
+      fullName, fatherName, mobile, email, amount, sendEmail,
+      paymentType = "full", pendingPaymentAmount, paymentExpiryDate
+    } = req.body;
 
     if (!fullName || !fatherName || !mobile || !email) {
       return res.status(400).json({
@@ -122,6 +139,19 @@ exports.adminAddEnrollment = async (req, res) => {
       return res.status(400).json({
         message: "Invalid mobile number. Must be 10 digits starting with 6-9"
       });
+    }
+
+    if (paymentType === "partial") {
+      if (!pendingPaymentAmount || pendingPaymentAmount <= 0) {
+        return res.status(400).json({
+          message: "Pending payment amount is required for partial payment"
+        });
+      }
+      if (!paymentExpiryDate) {
+        return res.status(400).json({
+          message: "Payment expiry date is required for partial payment"
+        });
+      }
     }
 
     const existingEnrollment = await MockTestEnrollment.findOne({
@@ -158,7 +188,10 @@ exports.adminAddEnrollment = async (req, res) => {
       amount: amount || process.env.MOCK_TEST_PRICE || 999,
       razorpayOrderId: `admin_${Date.now()}_${user._id}`,
       status: "confirmed",
-      addedByAdmin: req.user.email
+      addedByAdmin: req.user.email,
+      paymentType,
+      pendingPaymentAmount: paymentType === "partial" ? pendingPaymentAmount : undefined,
+      paymentExpiryDate: paymentType === "partial" ? new Date(paymentExpiryDate) : undefined
     });
 
     await newEnrollment.save();
@@ -177,7 +210,8 @@ exports.adminAddEnrollment = async (req, res) => {
         mobile: newEnrollment.mobile,
         status: newEnrollment.status,
         addedBy: req.user.email,
-        amount: newEnrollment.amount
+        amount: newEnrollment.amount,
+        paymentType: newEnrollment.paymentType
       }
     });
   } catch (error) {
@@ -190,6 +224,150 @@ exports.adminAddEnrollment = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error granting access",
+      error: error.message
+    });
+  }
+};
+
+// List everyone with a partial payment still on file (confirmed or
+// suspended), for the admin's Pending Payments panel.
+exports.getPendingPayments = async (req, res) => {
+  try {
+    const pendingStudents = await MockTestEnrollment.find({
+      paymentType: "partial",
+      status: { $in: ["confirmed", "fee_pending"] }
+    }).sort({ paymentExpiryDate: 1 });
+
+    res.status(200).json({
+      success: true,
+      students: pendingStudents
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error fetching pending payments",
+      error: error.message
+    });
+  }
+};
+
+// Suspend: immediately cuts access (checkAccess treats fee_pending as no access)
+exports.suspendStudent = async (req, res) => {
+  try {
+    const { enrollmentId } = req.params;
+
+    const enrollment = await MockTestEnrollment.findByIdAndUpdate(
+      enrollmentId,
+      { status: "fee_pending" },
+      { new: true }
+    );
+
+    if (!enrollment) {
+      return res.status(404).json({ success: false, message: "Enrollment not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Student suspended successfully",
+      enrollment
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error suspending student",
+      error: error.message
+    });
+  }
+};
+
+// Reactivate: the "vice versa" toggle — immediately restores access
+exports.reactivateStudent = async (req, res) => {
+  try {
+    const { enrollmentId } = req.params;
+
+    const enrollment = await MockTestEnrollment.findByIdAndUpdate(
+      enrollmentId,
+      { status: "confirmed" },
+      { new: true }
+    );
+
+    if (!enrollment) {
+      return res.status(404).json({ success: false, message: "Enrollment not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Student access reactivated successfully",
+      enrollment
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error reactivating student",
+      error: error.message
+    });
+  }
+};
+
+exports.sendPaymentReminder = async (req, res) => {
+  try {
+    const { enrollmentId } = req.params;
+
+    const enrollment = await MockTestEnrollment.findById(enrollmentId);
+
+    if (!enrollment) {
+      return res.status(404).json({ success: false, message: "Enrollment not found" });
+    }
+
+    await sendMockTestPaymentReminderEmail(enrollment);
+
+    res.status(200).json({ success: true, message: "Payment reminder email sent successfully" });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error sending payment reminder",
+      error: error.message
+    });
+  }
+};
+
+// Update a partial payment — raise/lower the pending amount, or mark it
+// fully paid (paymentType flips to "full", pending fields clear, and the
+// student drops out of the Pending Payments list automatically).
+exports.updatePendingPayment = async (req, res) => {
+  try {
+    const { enrollmentId } = req.params;
+    const { pendingPaymentAmount, paymentExpiryDate, markAsFullyPaid } = req.body;
+
+    const enrollment = await MockTestEnrollment.findById(enrollmentId);
+    if (!enrollment) {
+      return res.status(404).json({ success: false, message: "Enrollment not found" });
+    }
+
+    if (markAsFullyPaid) {
+      enrollment.paymentType = "full";
+      enrollment.pendingPaymentAmount = undefined;
+      enrollment.paymentExpiryDate = undefined;
+      enrollment.status = "confirmed";
+    } else {
+      if (pendingPaymentAmount === undefined || pendingPaymentAmount === null || pendingPaymentAmount < 0) {
+        return res.status(400).json({ success: false, message: "A valid pending payment amount is required" });
+      }
+      enrollment.pendingPaymentAmount = pendingPaymentAmount;
+      if (paymentExpiryDate) enrollment.paymentExpiryDate = new Date(paymentExpiryDate);
+    }
+
+    await enrollment.save();
+
+    res.status(200).json({
+      success: true,
+      message: markAsFullyPaid ? "Marked as fully paid" : "Pending payment updated",
+      enrollment
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error updating pending payment",
       error: error.message
     });
   }
