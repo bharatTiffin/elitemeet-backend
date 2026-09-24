@@ -11,7 +11,7 @@ const MentorshipProgram = require("../models/MentorshipProgram");
 const PDFPurchase = require("../models/PDFPurchase");
 const { sendEmail, sendEmailWithPDF, sendDigitalOfflineDemoEmail, sendBookingUserEmail, sendBookingAdminEmail } = require("../utils/email");
 const TypingPurchase = require("../models/TypingPurchase");
-const { generateNumericPassword, addMonths, ACCESS_MONTHS } = require("./typingController");
+const { generateNumericPassword, addMonths, ACCESS_MONTHS, TYPING_PRICE } = require("./typingController");
 const { sendTypingPurchaseUserEmail, sendTypingPurchaseAdminEmail } = require("../utils/email");
 const PolityPurchase = require("../models/PolityPurchase");
 const BookPurchase = require("../models/BookPurchase");
@@ -688,14 +688,13 @@ if (isBookPurchase) {
         return res.status(400).json({ error: "User information missing" });
       }
 
-      const getTypingPrice = () => 799;
       const now = new Date();
 
       purchase = new TypingPurchase({
         userFirebaseUid: userFirebaseUid,
         userName: userName,
         userEmail: userEmail,
-        amount: getTypingPrice(),
+        amount: TYPING_PRICE,
         razorpayOrderId: orderId,
         razorpayPaymentId: paymentId,
         status: "confirmed",

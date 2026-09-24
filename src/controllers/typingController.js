@@ -12,6 +12,10 @@ const razorpay = new Razorpay({
 
 const ACCESS_MONTHS = 6;
 
+// Single source of truth for the course price (INR). originalPrice is the struck-through "MRP" shown on the site.
+const TYPING_PRICE = Number(process.env.TYPING_PRICE) || 799;
+const TYPING_ORIGINAL_PRICE = Number(process.env.TYPING_ORIGINAL_PRICE) || 1000;
+
 // Random 6-digit numeric password, skipping guessable ones (123456, 111111, 000123...)
 const generateNumericPassword = () => {
   while (true) {
@@ -47,8 +51,6 @@ const findConfirmedPurchasesByEmail = (email) =>
 // Get typing course info (price, description, etc.)
 const getTypingInfo = async (req, res, next) => {
   try {
-    const getTypingPrice = () => 799;
-
     const typingInfo = {
       title: "PUNJABI & ENGLISH TYPING TRAINING",
       subtitle: "CLERK / SENIOR ASSISTANT LEVEL",
@@ -60,7 +62,8 @@ const getTypingInfo = async (req, res, next) => {
         "Speed + accuracy focused training",
         "Exam-oriented practice & mock tests"
       ],
-      price: getTypingPrice(),
+      price: TYPING_PRICE,
+      originalPrice: TYPING_ORIGINAL_PRICE,
       currency: "INR",
     };
 
@@ -84,9 +87,7 @@ const createTypingPurchase = async (req, res, next) => {
       return res.status(400).json({ error: "Name and email are required to continue" });
     }
 
-    const getTypingPrice = () => 799;
-
-    const typingPrice = getTypingPrice();
+    const typingPrice = TYPING_PRICE;
 
     // Create Razorpay order
     const options = {
@@ -245,6 +246,7 @@ module.exports = {
   generateNumericPassword,
   addMonths,
   ACCESS_MONTHS,
+  TYPING_PRICE,
   isExpired,
   getExpiryDate,
 };
