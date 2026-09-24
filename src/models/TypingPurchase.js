@@ -36,6 +36,16 @@ const typingPurchaseSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  // Manual-login credentials (plain text on purpose, per product decision)
+  password: {
+    type: String,
+    default: null,
+  },
+  // Access ends here (6 months after payment). Null on legacy rows -> derived from purchaseDate.
+  expiresAt: {
+    type: Date,
+    default: null,
+  },
 });
 
 module.exports = mongoose.model("TypingPurchase", typingPurchaseSchema);

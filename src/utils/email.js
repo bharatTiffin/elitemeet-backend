@@ -2694,8 +2694,114 @@ const sendMockTestPaymentReminderEmail = async (enrollment) => {
   console.log(`Prep Mode payment reminder email sent to ${enrollment.email}`);
 };
 
+/**
+ * Typing course: payment confirmation sent to the student with their manual-login credentials.
+ */
+const TYPING_LOGIN_URL = "https://elite-academy-punjabi-typing.vercel.app/login-manual";
+
+const formatIST = (date) =>
+  new Date(date).toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+const sendTypingPurchaseUserEmail = async ({ purchase, paymentId, expiresAt }) => {
+  const html = `
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 20px;">
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+      <h1 style="color: white; margin: 0; font-size: 26px;">Payment Successful ✅</h1>
+      <p style="color: #e0e7ff; margin-top: 10px; font-size: 16px;">Punjabi & English Typing Training</p>
+    </div>
+
+    <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <p style="color: #1f2937; font-size: 16px; line-height: 1.6;">Dear <strong>${purchase.userName}</strong>,</p>
+      <p style="color: #1f2937; font-size: 16px; line-height: 1.6;">
+        Your payment of <strong>₹${purchase.amount}</strong> was successful and <strong>6 months of access</strong> has been granted
+        (valid till <strong>${formatIST(expiresAt)}</strong>).
+      </p>
+
+      <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 25px; border-radius: 10px; margin: 25px 0; text-align: center;">
+        <h2 style="margin: 0 0 15px 0; color: white; font-size: 22px;">🔐 Your Login Details</h2>
+        <p style="color: #d1fae5; margin: 5px 0; font-size: 14px;">Email</p>
+        <p style="margin: 0 0 12px 0;"><strong style="background: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 4px; font-size: 16px;">${purchase.userEmail}</strong></p>
+        <p style="color: #d1fae5; margin: 5px 0; font-size: 14px;">Password</p>
+        <p style="margin: 0 0 18px 0;"><strong style="background: white; color: #059669; padding: 8px 18px; border-radius: 4px; font-size: 24px; letter-spacing: 4px;">${purchase.password}</strong></p>
+        <a href="${TYPING_LOGIN_URL}"
+           style="display: inline-block; background: white; color: #059669; text-decoration: none; padding: 14px 40px; border-radius: 8px; font-weight: bold; font-size: 17px;">
+          Login Now →
+        </a>
+        <p style="color: #d1fae5; margin: 15px 0 0 0; font-size: 13px; word-break: break-all;">
+          <a href="${TYPING_LOGIN_URL}" style="color: white; text-decoration: underline;">${TYPING_LOGIN_URL}</a>
+        </p>
+      </div>
+
+      <div style="background: #fef3c7; padding: 14px 16px; border-radius: 8px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+        <p style="margin: 0; color: #92400e; font-size: 14px;">
+          Open the link above, enter this email and password, and you're in. Please don't share your password —
+          access ends on <strong>${formatIST(expiresAt)}</strong>.
+        </p>
+      </div>
+
+      <div style="background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%); padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #3b82f6;">
+        <h3 style="margin-top: 0; color: #1e40af; font-size: 18px;">📋 Purchase Details</h3>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr><td style="padding: 8px 0; color: #4b5563;"><strong>Course</strong></td><td style="padding: 8px 0; color: #1f2937; text-align: right;">Punjabi & English Typing Training</td></tr>
+          <tr><td style="padding: 8px 0; color: #4b5563;"><strong>Amount Paid</strong></td><td style="padding: 8px 0; color: #059669; text-align: right; font-weight: bold;">₹${purchase.amount}</td></tr>
+          <tr><td style="padding: 8px 0; color: #4b5563;"><strong>Access</strong></td><td style="padding: 8px 0; color: #1f2937; text-align: right;">6 months</td></tr>
+          <tr><td style="padding: 8px 0; color: #4b5563;"><strong>Valid Till</strong></td><td style="padding: 8px 0; color: #1f2937; text-align: right;">${formatIST(expiresAt)}</td></tr>
+          <tr><td style="padding: 8px 0; color: #4b5563;"><strong>Payment ID</strong></td><td style="padding: 8px 0; color: #1f2937; text-align: right; font-size: 12px;">${paymentId}</td></tr>
+          <tr><td style="padding: 8px 0; color: #4b5563;"><strong>Purchase Date</strong></td><td style="padding: 8px 0; color: #1f2937; text-align: right;">${formatIST(purchase.purchaseDate)}</td></tr>
+        </table>
+      </div>
+
+      <p style="color: #6b7280; font-size: 13px;">Need help? Write to us at 2025eliteacademy@gmail.com.</p>
+    </div>
+  </div>`;
+
+  await sendEmail({
+    to: purchase.userEmail,
+    subject: "Payment Successful - Elite Academy Typing Course Login 🎉",
+    html,
+  });
+};
+
+/**
+ * Typing course: new-purchase notification for the admin (includes the issued credentials).
+ */
+const sendTypingPurchaseAdminEmail = async ({ purchase, admin, paymentId, expiresAt }) => {
+  const html = `
+  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+    <h2 style="color: #3b82f6;">New Typing Course Purchase ⌨️</h2>
+    <p>Payment received for the Punjabi & English Typing Training course. 6 months access granted.</p>
+    <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+      <p><strong>Customer Name:</strong> ${purchase.userName}</p>
+      <p><strong>Customer Email:</strong> ${purchase.userEmail}</p>
+      <p><strong>Amount:</strong> ₹${purchase.amount}</p>
+      <p><strong>Payment ID:</strong> ${paymentId}</p>
+      <p><strong>Purchase Date:</strong> ${formatIST(purchase.purchaseDate)}</p>
+      <p><strong>Access Expires:</strong> ${formatIST(expiresAt)}</p>
+      <p><strong>Login Password issued:</strong> ${purchase.password}</p>
+    </div>
+    <p style="color: #6b7280;">
+      Manual login page:<br>
+      <a href="${TYPING_LOGIN_URL}" style="color: #3b82f6;">${TYPING_LOGIN_URL}</a>
+    </p>
+    <p style="color: #6b7280; margin-top: 30px;">Best regards,<br><strong>Elite Meet System</strong></p>
+  </div>`;
+
+  await sendEmail({
+    to: admin.email,
+    subject: `New Typing Course Purchase ⌨️ - ${purchase.userName}`,
+    html,
+  });
+};
+
 // CORRECT EXPORT
 module.exports = {
+  sendTypingPurchaseUserEmail,
+  sendTypingPurchaseAdminEmail,
   sendEmail,
   sendEmailWithPDF,
   sendBookingUserEmail,

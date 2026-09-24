@@ -11,6 +11,8 @@ const MentorshipProgram = require("../models/MentorshipProgram");
 const PDFPurchase = require("../models/PDFPurchase");
 const { sendEmail, sendEmailWithPDF, sendDigitalOfflineDemoEmail, sendBookingUserEmail, sendBookingAdminEmail } = require("../utils/email");
 const TypingPurchase = require("../models/TypingPurchase");
+const { generateNumericPassword, addMonths, ACCESS_MONTHS } = require("./typingController");
+const { sendTypingPurchaseUserEmail, sendTypingPurchaseAdminEmail } = require("../utils/email");
 const PolityPurchase = require("../models/PolityPurchase");
 const BookPurchase = require("../models/BookPurchase");
 const { PackageType } = require("../models/BookPurchase");
@@ -662,9 +664,13 @@ if (isBookPurchase) {
         return res.json({ status: "ok" });
       }
     
-      // Update existing purchase
+      // Update existing purchase: confirm, issue password, start the 6-month window
+      const now = new Date();
       purchase.status = "confirmed";
       purchase.razorpayPaymentId = paymentId;
+      purchase.purchaseDate = now;
+      purchase.password = generateNumericPassword();
+      purchase.expiresAt = addMonths(now, ACCESS_MONTHS);
       await purchase.save();
     } else {
       // Create new purchase from order notes
@@ -683,6 +689,7 @@ if (isBookPurchase) {
       }
 
       const getTypingPrice = () => 799;
+      const now = new Date();
 
       purchase = new TypingPurchase({
         userFirebaseUid: userFirebaseUid,
@@ -692,6 +699,9 @@ if (isBookPurchase) {
         razorpayOrderId: orderId,
         razorpayPaymentId: paymentId,
         status: "confirmed",
+        purchaseDate: now,
+        password: generateNumericPassword(),
+        expiresAt: addMonths(now, ACCESS_MONTHS),
       });
     
       await purchase.save();
@@ -703,128 +713,18 @@ if (isBookPurchase) {
     // Get admin details
     const admin = await User.findOne({ role: "admin" });
 
-    // ✅ SEND EMAILS
+    // ✅ SEND EMAILS (student gets credentials, admin gets the purchase summary)
     const emailPromises = [];
 
-    // Email to User with access details
     if (purchase.userEmail) {
       emailPromises.push(
-        sendEmail({
-          to: purchase.userEmail,
-          subject: "Elite Academy - Punjabi Typing Course Access 🎉",
-          html: `
-  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 20px;">
-    
-    <!-- Header -->
-    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Elite Academy</h1>
-      <p style="color: #e0e7ff; margin-top: 10px; font-size: 16px;">Punjabi & English Typing Training</p>
-    </div>
-    
-    <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-      
-      <p style="color: #1f2937; font-size: 16px; line-height: 1.6;">Dear <strong>${purchase.userName}</strong>,</p>
-      
-      <p style="color: #1f2937; font-size: 16px; line-height: 1.6;">
-        ✅ Congratulations! Your enrollment in the <strong>Punjabi & English Typing Training</strong> course has been confirmed.
-      </p>
-
-      <!-- MOVE THIS TO TOP - Platform Access Section -->
-      <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 25px; border-radius: 10px; margin: 25px 0; text-align: center;">
-        <h2 style="margin: 0 0 15px 0; color: white; font-size: 22px;">🚀 Start Learning Now!</h2>
-        <a href="https://elite-academy-punjabi-typing.vercel.app/" 
-           style="display: inline-block; background: white; color: #059669; text-decoration: none; padding: 16px 50px; border-radius: 8px; font-weight: bold; font-size: 18px; margin: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-          Access Typing Platform →
-        </a>
-        <p style="color: #d1fae5; margin: 15px 0 5px 0; font-size: 15px;">
-          <strong>Platform URL:</strong><br>
-          <a href="https://elite-academy-punjabi-typing.vercel.app/" style="color: white; text-decoration: underline;">
-            elite-academy-punjabi-typing.vercel.app
-          </a>
-        </p>
-        <p style="color: #d1fae5; margin: 5px 0; font-size: 14px;">
-          Login with: <strong style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 4px;">${purchase.userEmail}</strong>
-        </p>
-      </div>
-
-      <!-- Purchase Details - NOW BELOW -->
-      <div style="background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%); padding: 20px; border-radius: 8px; margin: 25px 0; border-left: 4px solid #3b82f6;">
-        <h3 style="margin-top: 0; color: #1e40af; font-size: 18px;">📋 Purchase Details</h3>
-        <table style="width: 100%; border-collapse: collapse;">
-          <tr>
-            <td style="padding: 8px 0; color: #4b5563;"><strong>Course</strong></td>
-            <td style="padding: 8px 0; color: #1f2937; text-align: right;">Punjabi & English Typing Training</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 0; color: #4b5563;"><strong>Level</strong></td>
-            <td style="padding: 8px 0; color: #1f2937; text-align: right;">Clerk / Senior Assistant</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 0; color: #4b5563;"><strong>Amount Paid</strong></td>
-            <td style="padding: 8px 0; color: #059669; text-align: right; font-weight: bold;">₹${purchase.amount}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 0; color: #4b5563;"><strong>Payment ID</strong></td>
-            <td style="padding: 8px 0; color: #1f2937; text-align: right; font-size: 12px;">${paymentId}</td>
-          </tr>
-          <tr>
-            <td style="padding: 8px 0; color: #4b5563;"><strong>Purchase Date</strong></td>
-            <td style="padding: 8px 0; color: #1f2937; text-align: right;">${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'long', year: 'numeric' })}</td>
-          </tr>
-        </table>
-      </div>
-
-      <!-- Rest of the sections remain the same -->
-      <!-- How to Access, What You'll Learn, etc. -->
-      
-    </div>
-  </div>
-`,
-
-        })
+        sendTypingPurchaseUserEmail({ purchase, paymentId, expiresAt: purchase.expiresAt })
       );
     }
   
-    // Email to Admin
     if (admin && admin.email) {
       emailPromises.push(
-        sendEmail({
-          to: admin.email,
-          subject: "New Typing Course Purchase ⌨️",
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h2 style="color: #3b82f6;">New Typing Course Purchase ⌨️</h2>
-              
-              <p>You have a new purchase of the Punjabi & English Typing Training course.</p>
-              
-              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <p><strong>Customer Name:</strong> ${purchase.userName}</p>
-                <p><strong>Customer Email:</strong> ${purchase.userEmail}</p>
-                <p><strong>Amount:</strong> ₹${purchase.amount}</p>
-                <p><strong>Payment ID:</strong> ${paymentId}</p>
-                <p><strong>Purchase Date:</strong> ${new Date(purchase.purchaseDate).toLocaleDateString('en-IN', {
-                  timeZone: 'Asia/Kolkata',
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}</p>
-              </div>
-  
-              <p style="color: #6b7280;">
-                The customer will receive access to the typing platform at:<br>
-                <a href="https://elite-academy-punjabi-typing.vercel.app" style="color: #3b82f6;">
-                  elite-academy-punjabi-typing.vercel.app
-                </a>
-              </p>
-              
-              <p style="color: #6b7280; margin-top: 30px;">
-                Best regards,<br>
-                <strong>Elite Meet System</strong>
-              </p>
-            </div>
-          `,
-        })
+        sendTypingPurchaseAdminEmail({ purchase, admin, paymentId, expiresAt: purchase.expiresAt })
       );
     }
   

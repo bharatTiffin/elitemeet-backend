@@ -46,8 +46,27 @@ const auth = async (req, res, next) => {
     }
 
     if (isManualAuth) {
+      if (decoded.isTypingAuth) {
+        // Typing manual login: re-check expiry on every request
+        const TypingPurchase = require("../models/TypingPurchase");
+        const { isExpired } = require("../controllers/typingController");
+        const purchase = await TypingPurchase.findById(decoded.purchaseId);
+
+        if (!purchase || purchase.status !== "confirmed") {
+          return res.status(401).json({ error: "Purchase not found or not confirmed" });
+        }
+        if (isExpired(purchase)) {
+          return res.status(403).json({ code: "ACCESS_EXPIRED", error: "Access expired" });
+        }
+
+        req.user = {
+          id: purchase._id.toString(),
+          email: purchase.userEmail,
+          name: purchase.userName,
+          isTypingAuth: true
+        };
       // Check if this is a PYQs auth token
-      if (decoded.isPyqsAuth) {
+      } else if (decoded.isPyqsAuth) {
         const purchase = await PyqsPurchase.findById(decoded.purchaseId);
 
         if (!purchase || purchase.status !== 'confirmed') {

@@ -8,7 +8,11 @@ const {
   createTypingPurchase,
   getMyTypingPurchases,
   checkTypingAccess,
+  typingManualLogin,
 } = require("../controllers/typingController");
+
+// Manual login (email + 6-digit password from the purchase email) - public
+router.post("/manual-login", typingManualLogin);
 
 // Get typing course info (public)
 router.get("/info", getTypingInfo);

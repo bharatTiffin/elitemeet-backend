@@ -2,10 +2,47 @@
 const Razorpay = require("razorpay");
 const TypingPurchase = require("../models/TypingPurchase");
 
+const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
+
+const ACCESS_MONTHS = 6;
+
+// Random 6-digit numeric password, skipping guessable ones (123456, 111111, 000123...)
+const generateNumericPassword = () => {
+  while (true) {
+    const pwd = String(crypto.randomInt(0, 1000000)).padStart(6, "0");
+    const digits = pwd.split("").map(Number);
+    const allSame = digits.every((d) => d === digits[0]);
+    const ascending = digits.every((d, i) => i === 0 || d === digits[i - 1] + 1);
+    const descending = digits.every((d, i) => i === 0 || d === digits[i - 1] - 1);
+    if (!allSame && !ascending && !descending) return pwd;
+  }
+};
+
+const addMonths = (date, months) => {
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + months);
+  return d;
+};
+
+// Access end date: stored value, or purchaseDate + 6 months for legacy rows
+const getExpiryDate = (purchase) =>
+  purchase.expiresAt || addMonths(purchase.purchaseDate || Date.now(), ACCESS_MONTHS);
+
+const isExpired = (purchase) => getExpiryDate(purchase) <= new Date();
+
+const escapeRegex = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const findConfirmedPurchasesByEmail = (email) =>
+  TypingPurchase.find({
+    userEmail: new RegExp(`^${escapeRegex(String(email).trim())}$`, "i"),
+    status: "confirmed",
+  }).sort({ purchaseDate: -1 });
 
 // Get typing course info (price, description, etc.)
 const getTypingInfo = async (req, res, next) => {
@@ -132,33 +169,82 @@ const checkTypingAccess = async (req, res, next) => {
       // console.log("user.id",user?.id);
       // console.log("user.firebaseUid: ",user?.firebaseUid)
   
-      const purchase = await TypingPurchase.findOne({
-        userEmail: user.email, // ✅ FIXED
-        status: "confirmed",
-      });
-      console.log("purchase: ",purchase);
-  
-      if (purchase) {
+      const purchases = await findConfirmedPurchasesByEmail(user.email);
+      const active = purchases.find((p) => !isExpired(p));
+
+      if (active) {
         return res.json({
           hasAccess: true,
           purchase: {
-            purchaseDate: purchase.purchaseDate,
-            amount: purchase.amount
+            purchaseDate: active.purchaseDate,
+            amount: active.amount,
+            expiresAt: getExpiryDate(active),
           }
         });
       }
-  
-      res.json({ hasAccess: false });
+
+      // Purchased before but every purchase has lapsed
+      res.json({ hasAccess: false, expired: purchases.length > 0 });
     } catch (error) {
       console.error("Error checking typing access:", error);
       next(error);
     }
   };
-  
+
+// Manual login with the email + 6-digit password sent after payment
+const typingManualLogin = async (req, res, next) => {
+  try {
+    const { email, password } = req.body || {};
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
+    }
+
+    const purchases = await findConfirmedPurchasesByEmail(email);
+    const matches = purchases.filter((p) => p.password && p.password === String(password).trim());
+
+    if (matches.length === 0) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    const active = matches.find((p) => !isExpired(p));
+    if (!active) {
+      return res.status(403).json({
+        code: "ACCESS_EXPIRED",
+        error: "Your 6-month access has expired. Please purchase the course again.",
+      });
+    }
+
+    const expiresAt = getExpiryDate(active);
+    const jwtSecret = process.env.JWT_SECRET || "elite-academy-secret-key-2025";
+    // Token never outlives the course access
+    const expiresInSec = Math.max(1, Math.floor((expiresAt.getTime() - Date.now()) / 1000));
+    const token = jwt.sign(
+      { isTypingAuth: true, purchaseId: active._id.toString(), email: active.userEmail },
+      jwtSecret,
+      { expiresIn: expiresInSec }
+    );
+
+    res.json({
+      token,
+      email: active.userEmail,
+      name: active.userName,
+      expiresAt,
+    });
+  } catch (error) {
+    console.error("Error in typing manual login:", error);
+    next(error);
+  }
+};
 
 module.exports = {
   getTypingInfo,
   createTypingPurchase,
   getMyTypingPurchases,
   checkTypingAccess,
+  typingManualLogin,
+  generateNumericPassword,
+  addMonths,
+  ACCESS_MONTHS,
+  isExpired,
+  getExpiryDate,
 };
