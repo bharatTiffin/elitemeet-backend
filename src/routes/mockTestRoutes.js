@@ -2,13 +2,14 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
 const {
-  getInfo, enrollAndCreateOrder, checkAccess, adminAddEnrollment,
+  getInfo, enrollAndCreateOrder, checkAccess, checkDiscount, adminAddEnrollment,
   getPendingPayments, suspendStudent, reactivateStudent, sendPaymentReminder, updatePendingPayment
 } = require("../controllers/mockTestController");
 
 router.get("/info", getInfo);
 router.post("/enroll", enrollAndCreateOrder);
 router.get("/check-access", checkAccess);
+router.get("/check-discount", checkDiscount);
 router.post("/admin/add-enrollment", auth, adminAddEnrollment);
 router.get("/admin/pending-payments", auth, getPendingPayments);
 router.put("/admin/suspend/:enrollmentId", auth, suspendStudent);

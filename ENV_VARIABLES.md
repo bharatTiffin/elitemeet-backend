@@ -32,7 +32,9 @@
 - `WEEKLY_TEST_SERIES_PRICE` - Price for weekly test series
 - `TYPING_PRICE` - Price for typing course (default: 499)
 - `POLITY_PRICE` - Price for polity book (default: 199)
-- `MOCK_TEST_PRICE` - Price for Prep Mode / Mock Test Tracker (default: 999)
+- `MOCK_TEST_PRICE` - Full price for Prep Mode / Mock Test Tracker (default: 2999)
+- `MOCK_TEST_ENROLLED_PRICE` - Discounted Prep Mode price for students with a confirmed coaching enrollment (default: 999)
+- `MOCK_TEST_ORIGINAL_PRICE` - Strikethrough "original" price shown on the page (default: same as `MOCK_TEST_PRICE`)
 
 ### PDF Links (Google Drive)
 - `POLITY_PDF_LINK` - Google Drive link for Polity PDF

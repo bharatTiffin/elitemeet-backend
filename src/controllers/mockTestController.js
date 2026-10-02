@@ -1,4 +1,5 @@
 const MockTestEnrollment = require("../models/MockTestEnrollment");
+const CoachingEnrollment = require("../models/CoachingEnrollment");
 const User = require("../models/User");
 const Razorpay = require("razorpay");
 const bcrypt = require("bcrypt");
@@ -9,12 +10,55 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+const getFullPrice = () => Number(process.env.MOCK_TEST_PRICE) || 2999;
+const getEnrolledPrice = () => Number(process.env.MOCK_TEST_ENROLLED_PRICE) || 999;
+const getOriginalPrice = () => Number(process.env.MOCK_TEST_ORIGINAL_PRICE) || getFullPrice();
+
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Enrolled coaching students (confirmed CoachingEnrollment) get the discounted price.
+// Users who already hold confirmed Prep Mode access can't buy again.
+const getEligibility = async (rawEmail) => {
+  const email = String(rawEmail || "").trim().toLowerCase();
+  const emailRegex = { $regex: new RegExp(`^${escapeRegex(email)}$`, "i") };
+  const [coaching, mockTest] = await Promise.all([
+    CoachingEnrollment.findOne({ email: emailRegex, status: "confirmed" }).select("_id"),
+    MockTestEnrollment.findOne({ email: emailRegex, status: "confirmed" }).select("_id"),
+  ]);
+  return { email, eligible: !!coaching, alreadyHasAccess: !!mockTest };
+};
+
+const priceResponse = (eligible) => {
+  const fullPrice = getFullPrice();
+  const price = eligible ? getEnrolledPrice() : fullPrice;
+  return {
+    fullPrice,
+    price,
+    discountPercent: eligible ? Math.round((1 - price / fullPrice) * 10000) / 100 : 0,
+  };
+};
+
+exports.checkDiscount = async (req, res) => {
+  try {
+    const email = String(req.query.email || "").trim();
+    if (!EMAIL_RE.test(email)) {
+      return res.status(400).json({ message: "Please enter a valid email" });
+    }
+    const { eligible, alreadyHasAccess } = await getEligibility(email);
+    res.json({ eligible, alreadyHasAccess, ...priceResponse(eligible) });
+  } catch (error) {
+    res.status(500).json({ message: "Error checking discount", error: error.message });
+  }
+};
+
 exports.getInfo = async (req, res) => {
   res.json({
     package: {
       name: "🎯 Prep Mode — Mock Test & Weak Topic Tracker",
-      price: process.env.MOCK_TEST_PRICE || 999,
-      originalPrice: 1999,
+      price: getFullPrice(),
+      enrolledPrice: getEnrolledPrice(),
+      originalPrice: getOriginalPrice(),
       description: "For students who've finished the syllabus and want to know exactly where they stand. Take a Mock Test, get your weak topics, drill 100+ questions per topic, and only then unlock your next Mock Test — so your score climbs every round."
     }
   });
@@ -22,22 +66,31 @@ exports.getInfo = async (req, res) => {
 
 exports.enrollAndCreateOrder = async (req, res) => {
   try {
-    const { fullName, fatherName, mobile, email, agreedToTerms } = req.body;
-    const amount = process.env.MOCK_TEST_PRICE || 999;
+    const { fullName, fatherName, mobile, agreedToTerms } = req.body;
 
-    if (!fullName || !fatherName || !mobile || !email) {
+    if (!fullName || !fatherName || !mobile || !req.body.email) {
       return res.status(400).json({ message: "All fields are required" });
     }
     if (!agreedToTerms) {
       return res.status(400).json({ message: "You must agree to the terms and conditions" });
     }
+    if (!EMAIL_RE.test(String(req.body.email).trim())) {
+      return res.status(400).json({ message: "Please enter a valid email" });
+    }
+
+    // Price is decided here on the server, never by the browser
+    const { email, eligible, alreadyHasAccess } = await getEligibility(req.body.email);
+    if (alreadyHasAccess) {
+      return res.status(400).json({ message: "You already have Prep Mode access with this email" });
+    }
+    const amount = priceResponse(eligible).price;
 
     // 1. Create Razorpay Order
     const options = {
-      amount: amount * 100, // in paise
+      amount: Math.round(amount * 100), // in paise
       currency: "INR",
       receipt: `rcpt_${Date.now()}`,
-      notes: { purchaseType: "mock_test", userEmail: email }
+      notes: { purchaseType: "mock_test", userEmail: email, discountApplied: String(eligible) }
     };
 
     const order = await razorpay.orders.create(options);
