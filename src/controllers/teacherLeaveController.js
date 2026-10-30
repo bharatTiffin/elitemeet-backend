@@ -40,10 +40,11 @@ const fmtTime = (hhmm) => {
 
 const TYPE_LABEL = { lecture: "Lecture missed", half_day: "Half day", full_day: "Full day" };
 
-const describeLeave = (l) =>
-  l.type === "full_day"
-    ? "Full day"
-    : `${TYPE_LABEL[l.type]}${l.startTime ? ` (${fmtTime(l.startTime)} - ${fmtTime(l.endTime)})` : ""}`;
+const describeLeave = (l) => {
+  if (l.type === "full_day") return "Full day";
+  const label = l.type === "lecture" && l.lectureCount > 1 ? `${l.lectureCount} lectures missed` : TYPE_LABEL[l.type];
+  return `${label}${l.startTime ? ` (${fmtTime(l.startTime)} - ${fmtTime(l.endTime)})` : ""}`;
+};
 
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -102,6 +103,8 @@ exports.createLeave = async (req, res, next) => {
   try {
     if (!requireAdmin(req, res)) return;
     const { teacherId, type, date, dateTo, startTime = "", endTime = "", note = "", notify = true } = req.body;
+    const lectureCount = type === "lecture" ? Math.floor(Number(req.body.lectureCount) || 1) : 1;
+    if (lectureCount < 1 || lectureCount > 10) return res.status(400).json({ error: "Lecture count must be between 1 and 10" });
 
     const teacher = await Teacher.findById(teacherId);
     if (!teacher) return res.status(404).json({ error: "Teacher not found" });
@@ -135,7 +138,7 @@ exports.createLeave = async (req, res, next) => {
       });
       if (exists) continue;
       created.push(await TeacherLeave.create({
-        teacher: teacher._id, date: d, type,
+        teacher: teacher._id, date: d, type, lectureCount,
         startTime: isFull ? "" : startTime,
         endTime: isFull ? "" : endTime,
         note,
@@ -201,7 +204,8 @@ exports.getSummary = async (req, res, next) => {
         teacher: t,
         fullDays: mine.filter((l) => l.type === "full_day").length,
         halfDays: mine.filter((l) => l.type === "half_day").length,
-        lectures: mine.filter((l) => l.type === "lecture").length,
+        // Total lectures missed (an entry can cover several lectures; older entries count as 1)
+        lectures: mine.filter((l) => l.type === "lecture").reduce((sum, l) => sum + (l.lectureCount || 1), 0),
         leaves: mine,
       };
     });
